@@ -31,6 +31,8 @@ public class MainWindow {
 		frame.add(mapImage);
 		
 		frame.setVisible(true);
+		
+		// set window to the middle of the screen
 		Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
 		frame.setSize(screenSize.width / 2, screenSize.height / 2);
 		frame.setLocation(screenSize.width / 4, screenSize.height / 4);

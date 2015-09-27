@@ -2,13 +2,9 @@ package gui;
 
 import java.awt.Graphics;
 import java.awt.Graphics2D;
-import java.awt.Point;
 import java.awt.RenderingHints;
-import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.awt.event.MouseMotionListener;
 import java.awt.event.MouseWheelEvent;
-import java.awt.event.MouseWheelListener;
 import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
 import java.io.File;
@@ -20,7 +16,8 @@ import javax.swing.SwingUtilities;
 import javax.swing.event.MouseInputAdapter;
 
 public class ImageComponent extends JComponent {
-
+	private static final long serialVersionUID = 1L;
+	
 	private static final String mapPath = "res/sy_map.jpg";
 	private static final double SCALE_FACTOR = 1.1;
 	private static final double MAX_SCALE = 5;
@@ -63,11 +60,7 @@ public class ImageComponent extends JComponent {
 					lastY = e.getY();
 				}
 			}
-		};
-		addMouseListener(mouseInputAdapter);
-		addMouseMotionListener(mouseInputAdapter);
-		
-		addMouseWheelListener(new MouseWheelListener() {
+			
 			@Override
 			public void mouseWheelMoved(MouseWheelEvent e) {
 				if(e.getWheelRotation() < 0)
@@ -79,7 +72,10 @@ public class ImageComponent extends JComponent {
 				
 				repaint();
 			}
-		});
+		};
+		addMouseListener(mouseInputAdapter);
+		addMouseMotionListener(mouseInputAdapter);
+		addMouseWheelListener(mouseInputAdapter);
 	}
 	
 	@Override
