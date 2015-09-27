@@ -25,8 +25,9 @@ public class GraphDataInput {
 	/**
 	 * @param args
 	 * @throws IOException 
+	 * @throws ClassNotFoundException 
 	 */
-	public static void main(String[] args) throws IOException {
+	public static void main(String[] args) throws IOException, ClassNotFoundException {
 		final JFrame frame = new JFrame() {
 			private static final long serialVersionUID = 1L;
 
@@ -47,7 +48,7 @@ public class GraphDataInput {
 		
 		frame.setVisible(true);
 		
-		final GraphData graphData = new GraphData();
+		final GraphData graphData = GraphData.loadFromFile("res/sy_map.data");
 		
 		MouseInputAdapter mouseInputAdapter = new MouseInputAdapter() {	
 			@Override
@@ -56,7 +57,6 @@ public class GraphDataInput {
 					rightHold = true;
 					startX = endX = e.getX();
 					startY = endY = e.getY();
-					System.out.println("pressed");
 				}
 			}
 			
@@ -66,7 +66,6 @@ public class GraphDataInput {
 					endX = e.getX();
 					endY = e.getY();
 					frame.repaint();
-					System.out.println("dragged");
 				}
 			}
 			
@@ -117,6 +116,7 @@ public class GraphDataInput {
 			public void run() {
 				try {
 					graphData.store("res/sy_map.data");
+					System.out.println("Missing stations: " + graphData.getUnsetStations());
 				} catch (IOException e) {
 					e.printStackTrace();
 				}

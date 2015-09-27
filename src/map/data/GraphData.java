@@ -1,6 +1,7 @@
 package map.data;
 
 import java.awt.Rectangle;
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
@@ -8,6 +9,7 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.HashSet;
 
 
@@ -27,8 +29,13 @@ public class GraphData implements Serializable {
 	public static GraphData loadFromFile(String fileName) throws FileNotFoundException, IOException, ClassNotFoundException {
 		ObjectInputStream ois = null;
 		try {
-			ois = new ObjectInputStream(new FileInputStream(fileName));		
+			File file = new File(fileName);
+			if(!file.exists() || !file.isFile())
+				return new GraphData();
+			ois = new ObjectInputStream(new FileInputStream(file));		
 			return (GraphData)ois.readObject();
+		} catch (FileNotFoundException e) {
+			return new GraphData();
 		} catch (Exception e) {
 			throw e;
 		} finally {
@@ -87,5 +94,15 @@ public class GraphData implements Serializable {
 		ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(fileName));
 		oos.writeObject(this);
 		oos.close();
+	}
+	
+	public ArrayList<Integer> getUnsetStations() {
+		ArrayList<Integer> result = new ArrayList<Integer>(STATION_COUNT);
+		
+		for(int i = 0; i < stations.length; ++i)
+			if(stations[i] == null)
+				result.add(i + 1);
+		
+		return result;
 	}
 }
