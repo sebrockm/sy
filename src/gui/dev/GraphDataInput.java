@@ -10,8 +10,13 @@ import java.awt.Toolkit;
 import java.awt.event.MouseEvent;
 import java.io.IOException;
 
+import javax.swing.ButtonGroup;
 import javax.swing.JFrame;
+import javax.swing.JMenu;
+import javax.swing.JMenuBar;
+import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
+import javax.swing.JRadioButton;
 import javax.swing.SwingUtilities;
 import javax.swing.event.MouseInputAdapter;
 
@@ -23,6 +28,7 @@ public class GraphDataInput {
 	private static int startX, startY, endX, endY;
 	
 	/**
+	 * Use this class to create nodes or links on a map.
 	 * @param args
 	 * @throws IOException 
 	 * @throws ClassNotFoundException 
@@ -37,11 +43,35 @@ public class GraphDataInput {
 				
 				if(g instanceof Graphics2D && rightHold) {
 			        Graphics2D g2 = (Graphics2D)g;
-			        g2.drawRect(startX, startY, endX - startX, endY - startY);
+			        g2.drawRect(Math.min(startX, endX), Math.min(startY, endY), 
+			        		Math.abs(endX - startX), Math.abs(endY - startY));
 				}
 			} 
 		};
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+	
+		JMenuBar menuBar = new JMenuBar();
+		JMenu menu = menuBar.add(new JMenu("Options"));
+		ButtonGroup buttonGroup = new ButtonGroup();
+		JRadioButton addNodesButton = new JRadioButton("Add Nodes");
+		buttonGroup.add(addNodesButton);
+		menu.add(addNodesButton);
+		JRadioButton addTaxiLinksButton = new JRadioButton("Add Taxi Links");
+		buttonGroup.add(addTaxiLinksButton);
+		menu.add(addTaxiLinksButton);
+		JRadioButton addBusLinksButton = new JRadioButton("Add Bus Links");
+		buttonGroup.add(addBusLinksButton);
+		menu.add(addBusLinksButton);
+		JRadioButton addUndergroundLinksButton = new JRadioButton("Add Underground Links");
+		buttonGroup.add(addUndergroundLinksButton);
+		menu.add(addUndergroundLinksButton);
+		JRadioButton addBoatLinksButton = new JRadioButton("Add Boat Links");
+		buttonGroup.add(addBoatLinksButton);
+		menu.add(addBoatLinksButton);
+		
+		addNodesButton.setSelected(true);
+		
+		frame.setJMenuBar(menuBar);
 		
 		final ImageComponent mapImage = new ImageComponent();
 		frame.add(mapImage);
@@ -75,7 +105,7 @@ public class GraphDataInput {
 					do {
 						String input = JOptionPane.showInputDialog("Number:");
 						if(input == null)
-							return;
+							break;
 						
 						int number = 0;
 						try {
@@ -85,10 +115,10 @@ public class GraphDataInput {
 							continue; 
 						}
 						
-						double x = mapImage.fromOuterToImageCoordinateX(startX);
-						double y = mapImage.fromOuterToImageCoordinateY(startY);
-						double width = mapImage.fromOuterToImageCoordinateX(endX) - x;
-						double height = mapImage.fromOuterToImageCoordinateX(endY) - y;
+						double x = mapImage.fromOuterToImageCoordinateX(Math.min(startX, endX));
+						double y = mapImage.fromOuterToImageCoordinateY(Math.min(startY, endY));
+						double width = mapImage.fromOuterToImageCoordinateX(Math.max(startX, endX)) - x;
+						double height = mapImage.fromOuterToImageCoordinateX(Math.max(startY, endY)) - y;
 						
 						try {
 							graphData.createNode(number, new Rectangle((int)x, (int)y, (int)width, (int)height));
