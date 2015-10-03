@@ -2,7 +2,9 @@ package gui;
 
 import java.awt.Graphics;
 import java.awt.Graphics2D;
+import java.awt.Rectangle;
 import java.awt.RenderingHints;
+import java.awt.Shape;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseWheelEvent;
 import java.awt.geom.AffineTransform;
@@ -11,19 +13,24 @@ import java.io.File;
 import java.io.IOException;
 
 import javax.imageio.ImageIO;
+import javax.management.RuntimeErrorException;
 import javax.swing.JComponent;
 import javax.swing.SwingUtilities;
 import javax.swing.event.MouseInputAdapter;
+
+import map.data.GraphData;
 
 public class ImageComponent extends JComponent {
 	private static final long serialVersionUID = 1L;
 	
 	private static final String mapPath = "res/sy_map.jpg";
+	private static final String dataPath = "res/sy_map.data";
 	private static final double SCALE_FACTOR = 1.1;
 	private static final double MAX_SCALE = 5;
 	private static final double MIN_SCALE = 0.3;
 	
 	private final BufferedImage mapImage;
+	private final GraphData graphData;
 	private double scale;
 	private double topLeftCornerX;
 	private double topLeftCornerY;
@@ -34,6 +41,12 @@ public class ImageComponent extends JComponent {
 		setDefaultScale();
 		topLeftCornerX = 0;
 		topLeftCornerY = 0;
+		
+		try {
+			graphData = GraphData.loadFromFile(dataPath);
+		} catch (ClassNotFoundException e) {
+			throw new RuntimeException(e);
+		}
 		
 		mapImage = ImageIO.read(new File(mapPath));
 		setVisible(true);
@@ -90,6 +103,16 @@ public class ImageComponent extends JComponent {
 	        at.scale(scale, scale);
 	        
 	        g2.drawRenderedImage(mapImage, at);
+	        
+	        for(int i = 1; i < GraphData.STATION_COUNT; ++i) {
+	        	Rectangle rect = graphData.getArea(i);
+	        	if(rect == null)
+	        		continue;
+	        	
+	        	Shape shape = at.createTransformedShape(rect);
+	        	rect = shape.getBounds();
+	        	g2.drawRect(rect.x, rect.y, rect.width, rect.height);
+	        }
 		}
 	}
 	
@@ -98,7 +121,7 @@ public class ImageComponent extends JComponent {
 	}
 	
 	public double fromOuterToImageCoordinateY(double y) {
-		return (y - topLeftCornerX) / scale; 
+		return (y - topLeftCornerY) / scale; 
 	}
 	
 	public void zoomIn(double x, double y) {
