@@ -1,15 +1,15 @@
 package map.data;
 
-import java.awt.Rectangle;
+import java.awt.Shape;
 import java.io.Serializable;
 
 public class StationNode implements Serializable {
 	private static final long serialVersionUID = 1L;
 	
 	private final int number;
-	private final Rectangle area;
+	private final Shape area;
 	
-	public StationNode(int number, Rectangle area) {
+	public StationNode(int number, Shape area) {
 		this.number = number;
 		this.area = area;
 	}
@@ -18,7 +18,7 @@ public class StationNode implements Serializable {
 		return number;
 	}
 	
-	public Rectangle getArea() {
+	public Shape getArea() {
 		return area;
 	}
 	

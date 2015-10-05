@@ -1,8 +1,8 @@
 package gui;
 
+import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
-import java.awt.Rectangle;
 import java.awt.RenderingHints;
 import java.awt.Shape;
 import java.awt.event.MouseEvent;
@@ -13,7 +13,6 @@ import java.io.File;
 import java.io.IOException;
 
 import javax.imageio.ImageIO;
-import javax.management.RuntimeErrorException;
 import javax.swing.JComponent;
 import javax.swing.SwingUtilities;
 import javax.swing.event.MouseInputAdapter;
@@ -30,7 +29,7 @@ public class ImageComponent extends JComponent {
 	private static final double MIN_SCALE = 0.3;
 	
 	private final BufferedImage mapImage;
-	private final GraphData graphData;
+	private GraphData graphData;
 	private double scale;
 	private double topLeftCornerX;
 	private double topLeftCornerY;
@@ -105,23 +104,27 @@ public class ImageComponent extends JComponent {
 	        g2.drawRenderedImage(mapImage, at);
 	        
 	        for(int i = 1; i < GraphData.STATION_COUNT; ++i) {
-	        	Rectangle rect = graphData.getArea(i);
-	        	if(rect == null)
+	        	Shape area = graphData.getArea(i);
+	        	if(area == null)
 	        		continue;
 	        	
-	        	Shape shape = at.createTransformedShape(rect);
-	        	rect = shape.getBounds();
-	        	g2.drawRect(rect.x, rect.y, rect.width, rect.height);
+	        	Color lastColor = g2.getColor();
+	        	final Color transparentRed = new Color(1.f, 0, 0, 0.5f);
+	        	g2.setColor(transparentRed);
+	        	g2.draw(at.createTransformedShape(area));
+	        	g2.setColor(lastColor);
 	        }
 		}
 	}
 	
-	public double fromOuterToImageCoordinateX(double x) {
-		return (x - topLeftCornerX) / scale;
+	public GraphData getGraphData() {
+		return graphData;
 	}
 	
-	public double fromOuterToImageCoordinateY(double y) {
-		return (y - topLeftCornerY) / scale; 
+	public AffineTransform fromOuterToImageTransform() {
+		AffineTransform at = AffineTransform.getScaleInstance(1/scale, 1/scale);
+		at.translate(-topLeftCornerX, -topLeftCornerY);
+		return at;
 	}
 	
 	public void zoomIn(double x, double y) {
@@ -138,6 +141,10 @@ public class ImageComponent extends JComponent {
 			topLeftCornerY = y + (topLeftCornerY - y) / SCALE_FACTOR;
 			scale /= SCALE_FACTOR;
 		}
+	}
+	
+	public double getCurrentZoomFactor() {
+		return scale;
 	}
 	
 	public void setDefaultScale() {

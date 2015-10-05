@@ -1,6 +1,6 @@
 package map.data;
 
-import java.awt.Rectangle;
+import java.awt.Shape;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -44,8 +44,10 @@ public class GraphData implements Serializable {
 		}
 	}
 	
-	public Rectangle getArea(int nodeNumber) {
+	public Shape getArea(int nodeNumber) {
 		checkNodeNumber(nodeNumber);
+		if (stations[nodeNumber - 1] == null)
+			return null;
 		return stations[nodeNumber - 1].getArea();
 	}
 	
@@ -62,7 +64,7 @@ public class GraphData implements Serializable {
 			adjacencyList[i] = new HashSet<StationLink>();
 	}
 	
-	public void createNode(int nodeNumber, Rectangle area) {
+	public void createNode(int nodeNumber, Shape area) {
 		checkNodeNumber(nodeNumber);
 		
 		if(stations[nodeNumber - 1] != null)
