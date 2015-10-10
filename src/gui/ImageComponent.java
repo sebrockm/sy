@@ -3,11 +3,13 @@ package gui;
 import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
-import java.awt.RenderingHints;
+import java.awt.Rectangle;
 import java.awt.Shape;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseWheelEvent;
 import java.awt.geom.AffineTransform;
+import java.awt.geom.Point2D;
+import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
@@ -33,6 +35,8 @@ public class ImageComponent extends JComponent {
 	private double scale;
 	private double topLeftCornerX;
 	private double topLeftCornerY;
+	
+	private Shape highlightedArea = null;
 
 	public ImageComponent() throws IOException {
 		super();
@@ -65,11 +69,12 @@ public class ImageComponent extends JComponent {
 
 			@Override
 			public void mouseDragged(MouseEvent e) {
+				setHighlighted(e);
 				if(SwingUtilities.isLeftMouseButton(e)) {
 					translate(e.getX() - lastX, e.getY() - lastY);
-					repaint();
 					lastX = e.getX();
 					lastY = e.getY();
+					repaint();
 				}
 			}
 			
@@ -82,7 +87,41 @@ public class ImageComponent extends JComponent {
 					for(int i = 0; i < e.getWheelRotation(); ++i)
 						zoomOut(e.getX(), e.getY());
 				
+				setHighlighted(e);
 				repaint();
+			}
+			
+			@Override
+			public void mouseMoved(MouseEvent e) {
+				if(setHighlighted(e))
+					repaint();
+			}
+			
+			private boolean setHighlighted(MouseEvent e) {
+				boolean changed = false;
+				int i;
+				for(i = 1; i <= GraphData.STATION_COUNT; ++i) {
+		        	Shape area = graphData.getArea(i);
+		        	if(area == null)
+		        		continue;
+		        	
+		        	area = fromImageToOuterTransform().createTransformedShape(area);
+		        	
+		        	if(area.contains(e.getX(), e.getY())) {
+		        		if(area != highlightedArea) {
+		        			highlightedArea = area;
+		        			changed = true;
+		        		}
+		        		break;
+		        	}
+				}
+				
+				if(i > GraphData.STATION_COUNT && highlightedArea != null) {
+					highlightedArea = null;
+					changed = true;
+				}
+				
+				return changed;
 			}
 		};
 		addMouseListener(mouseInputAdapter);
@@ -91,30 +130,43 @@ public class ImageComponent extends JComponent {
 	}
 	
 	@Override
-	protected void paintComponent(Graphics g) {
+	protected void paintComponent(Graphics g) {		
 		super.paintComponent(g);
+		if(!(g instanceof Graphics2D)) 
+			return;
 		
-		if(g instanceof Graphics2D) {
-	        Graphics2D g2 = (Graphics2D)g;
-	        g2.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_SPEED);
-	        
-	        AffineTransform at = AffineTransform.getTranslateInstance(topLeftCornerX, topLeftCornerY);
-	        at.scale(scale, scale);
-	        
-	        g2.drawRenderedImage(mapImage, at);
-	        
-	        for(int i = 1; i < GraphData.STATION_COUNT; ++i) {
-	        	Shape area = graphData.getArea(i);
-	        	if(area == null)
-	        		continue;
-	        	
-	        	Color lastColor = g2.getColor();
-	        	final Color transparentRed = new Color(1.f, 0, 0, 0.5f);
-	        	g2.setColor(transparentRed);
-	        	g2.draw(at.createTransformedShape(area));
-	        	g2.setColor(lastColor);
-	        }
-		}
+        Graphics2D g2 = (Graphics2D)g;
+        
+        AffineTransform at = fromImageToOuterTransform();
+        
+        g2.drawRenderedImage(mapImage, at);
+        
+        if(highlightedArea != null) {
+	        drawHighlightedArea(highlightedArea, g2);
+        }
+	}
+	
+	private void drawHighlightedArea(Shape area, Graphics2D g2) {
+		Color lastColor = g2.getColor();
+        
+		AffineTransform at = fromOuterToImageTransform();        
+        Rectangle2D bounds = area.getBounds2D();
+        
+        for(int y = 0; y < bounds.getHeight(); ++y) {
+    		for(int x = 0; x < bounds.getWidth(); ++x) {
+    			Point2D p = new Point2D.Double(bounds.getMinX() + x, bounds.getMinY() + y);
+    			if(!area.contains(p))
+    				continue;
+    			
+    			Point2D imageP = at.transform(p, null);
+    			Color pixelColor = new Color(mapImage.getRGB((int)imageP.getX(), (int)imageP.getY()), true);
+    			pixelColor = pixelColor.brighter();
+    			g2.setColor(pixelColor);
+    			g2.draw(new Rectangle((int)p.getX(), (int)p.getY(), 1, 1));
+    		}
+    	}
+        
+        g2.setColor(lastColor);
 	}
 	
 	public GraphData getGraphData() {
@@ -124,6 +176,12 @@ public class ImageComponent extends JComponent {
 	public AffineTransform fromOuterToImageTransform() {
 		AffineTransform at = AffineTransform.getScaleInstance(1/scale, 1/scale);
 		at.translate(-topLeftCornerX, -topLeftCornerY);
+		return at;
+	}
+	
+	public AffineTransform fromImageToOuterTransform() {
+		AffineTransform at = AffineTransform.getTranslateInstance(topLeftCornerX, topLeftCornerY);
+        at.scale(scale, scale);
 		return at;
 	}
 	
