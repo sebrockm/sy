@@ -1,5 +1,6 @@
 package map.data;
 
+import java.awt.geom.Path2D;
 import java.io.Serializable;
 
 public class StationLink implements Serializable {
@@ -11,16 +12,18 @@ public class StationLink implements Serializable {
 	public static final int BOAT_LINK = 0x08;
 	
 	private final StationNode source, target;
+	private final Path2D path;
 	
 	private final int linkType;
 	
-	public StationLink(StationNode source, StationNode target, int linkType) {
+	public StationLink(StationNode source, StationNode target, int linkType, Path2D path) {
 		if(linkType != TAXI_LINK && linkType != BUS_LINK && linkType != UNDERGROUND_LINK && linkType != BOAT_LINK)
 			throw new IllegalArgumentException(linkType + " is no proper link type.");
 		
 		this.source = source;
 		this.target = target;
 		this.linkType = linkType;
+		this.path = path;
 	}
 	
 	public StationNode getSourceStation() {
@@ -29,6 +32,10 @@ public class StationLink implements Serializable {
 	
 	public StationNode getTargetStation() {
 		return target;
+	}
+	
+	public Path2D getPath() {
+		return path;
 	}
 	
 	public boolean isTaxiLink() {
@@ -47,8 +54,11 @@ public class StationLink implements Serializable {
 		return linkType == BOAT_LINK;
 	}
 	
-	@Override
-	public boolean equals(Object other) {
+	public int getLinkType() {
+		return linkType;
+	}
+	
+	public boolean equals1(Object other) {
 		if(!(other instanceof StationLink))
 			return super.equals(other);
 		
@@ -56,5 +66,39 @@ public class StationLink implements Serializable {
 		return linkType == otherLink.linkType && 
 				(source == otherLink.source && target == otherLink.target ||
 				source == otherLink.target && target == otherLink.source);
+	}
+
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + linkType;
+		result = prime * result + ((source == null) ? 0 : source.hashCode());
+		result = prime * result + ((target == null) ? 0 : target.hashCode());
+		return result;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (!(obj instanceof StationLink))
+			return false;
+		StationLink other = (StationLink) obj;
+		if (linkType != other.linkType)
+			return false;
+		if (source == null) {
+			if (other.source != null)
+				return false;
+		} else if (!source.equals(other.source))
+			return false;
+		if (target == null) {
+			if (other.target != null)
+				return false;
+		} else if (!target.equals(other.target))
+			return false;
+		return true;
 	}
 }

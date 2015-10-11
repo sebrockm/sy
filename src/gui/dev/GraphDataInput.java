@@ -7,10 +7,13 @@ import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Shape;
 import java.awt.Toolkit;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Area;
 import java.awt.geom.Ellipse2D;
+import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.awt.geom.RoundRectangle2D;
 import java.io.IOException;
@@ -19,18 +22,27 @@ import javax.swing.ButtonGroup;
 import javax.swing.JFrame;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
+import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JRadioButton;
 import javax.swing.SwingUtilities;
 import javax.swing.event.MouseInputAdapter;
 
 import map.data.GraphData;
+import map.data.StationLink;
 
 public class GraphDataInput {
 	private static int currentMouseX, currentMouseY;
+	private static int sourceNodeId;
 	
 	private static ImageComponent mapImage;
 	private static JMenuBar menuBar;
+	
+	private static JRadioButton addNodesButton;
+	private static JRadioButton addTaxiLinksButton;
+	private static JRadioButton addBusLinksButton; 
+	private static JRadioButton addUndergroundLinksButton;
+	private static JRadioButton addBoatLinksButton;
 	
 	private static Shape getNodeShape() {
 		final double scale = 1 / 1.35; // this somehow fits
@@ -62,10 +74,31 @@ public class GraphDataInput {
 		return at.createTransformedShape(nodeShape);
 	}
 	
-	private static void placeNode(GraphData graphData, int nodeNumber) {
+	private static AffineTransform getOuterToImageTransform() {
 		AffineTransform af = mapImage.fromOuterToImageTransform();
 		af.translate(0, -menuBar.getHeight());
-		graphData.createNode(nodeNumber, af.createTransformedShape(getCurrentNodeShape()));
+		return af;
+	}
+	
+	private static void placeNode(GraphData graphData, int nodeNumber) {
+		graphData.createNode(nodeNumber, getOuterToImageTransform().createTransformedShape(getCurrentNodeShape()));
+	}
+	
+	private static int getNodeAtMousePosition(GraphData graphData) {
+		Point2D imagePoint = mapImage.fromOuterToImageTransform().transform(new Point2D.Double(currentMouseX, currentMouseY), null);
+		return graphData.getNodeAtPosition(imagePoint.getX(), imagePoint.getY());
+	}
+	
+	private static int getSelectedLinkType() {
+		if(addTaxiLinksButton.isSelected())
+			return StationLink.TAXI_LINK;
+		if(addBusLinksButton.isSelected())
+			return StationLink.BUS_LINK;
+		if(addUndergroundLinksButton.isSelected())
+			return StationLink.UNDERGROUND_LINK;
+		if(addBoatLinksButton.isSelected())
+			return StationLink.BOAT_LINK;
+		return 0;
 	}
 	
 	/**
@@ -76,25 +109,28 @@ public class GraphDataInput {
 	 */
 	public static void main(String[] args) throws IOException, ClassNotFoundException {			
 		menuBar = new JMenuBar();
-		final JMenu menu = menuBar.add(new JMenu("Options"));
+		final JMenu optionsMenu = menuBar.add(new JMenu("Options"));
 		final ButtonGroup buttonGroup = new ButtonGroup();
-		final JRadioButton addNodesButton = new JRadioButton("Add Nodes");
+		addNodesButton = new JRadioButton("Add Nodes");
 		buttonGroup.add(addNodesButton);
-		menu.add(addNodesButton);
-		final JRadioButton addTaxiLinksButton = new JRadioButton("Add Taxi Links");
+		optionsMenu.add(addNodesButton);
+		addTaxiLinksButton = new JRadioButton("Add Taxi Links");
 		buttonGroup.add(addTaxiLinksButton);
-		menu.add(addTaxiLinksButton);
-		final JRadioButton addBusLinksButton = new JRadioButton("Add Bus Links");
+		optionsMenu.add(addTaxiLinksButton);
+		addBusLinksButton = new JRadioButton("Add Bus Links");
 		buttonGroup.add(addBusLinksButton);
-		menu.add(addBusLinksButton);
-		final JRadioButton addUndergroundLinksButton = new JRadioButton("Add Underground Links");
+		optionsMenu.add(addBusLinksButton);
+		addUndergroundLinksButton = new JRadioButton("Add Underground Links");
 		buttonGroup.add(addUndergroundLinksButton);
-		menu.add(addUndergroundLinksButton);
-		final JRadioButton addBoatLinksButton = new JRadioButton("Add Boat Links");
+		optionsMenu.add(addUndergroundLinksButton);
+		addBoatLinksButton = new JRadioButton("Add Boat Links");
 		buttonGroup.add(addBoatLinksButton);
-		menu.add(addBoatLinksButton);
+		optionsMenu.add(addBoatLinksButton);
 		
 		addNodesButton.setSelected(true);
+		
+		final JMenu actionsMenu = menuBar.add(new JMenu("Actions"));
+		final JMenuItem deleteAllLinksItem = actionsMenu.add(new JMenuItem("Remove all links"));
 
 		final JFrame frame = new JFrame() {
 			private static final long serialVersionUID = 1L;
@@ -128,6 +164,18 @@ public class GraphDataInput {
 		
 		frame.setVisible(true);
 		
+		sourceNodeId  = 0;
+		
+		deleteAllLinksItem.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				int chosen = JOptionPane.showConfirmDialog(null, 
+						"Really remove all links of the selected type?", "Confirm", JOptionPane.OK_CANCEL_OPTION);
+				if(chosen == JOptionPane.OK_OPTION)
+					graphData.removeAllLinks(getSelectedLinkType());
+			}
+		});
+		
 		MouseInputAdapter mouseInputAdapter = new MouseInputAdapter() {	
 			private int lastInput = 0;
 			
@@ -136,23 +184,39 @@ public class GraphDataInput {
 				currentMouseX = e.getX();
 				currentMouseY = e.getY();
 				if(addNodesButton.isSelected()) {
-					frame.repaint();
+					frame.repaint(); // repaint the node shape under the cursor
 				}
 			}
 			
 			@Override
 			public void mouseClicked(MouseEvent e) {
-				if(SwingUtilities.isLeftMouseButton(e)) {
-					String input = JOptionPane.showInputDialog("Number:", lastInput + 1);
-					
-					try {
-						lastInput = Integer.parseInt(input);
-					} catch (NumberFormatException ex) {
-						ex.printStackTrace();
-						return;
+				if(addNodesButton.isSelected()) {
+					if(SwingUtilities.isLeftMouseButton(e)) {
+						String input = JOptionPane.showInputDialog("Number:", lastInput + 1);
+						
+						try {
+							lastInput = Integer.parseInt(input);
+						} catch (NumberFormatException ex) {
+							System.err.println(input + " is not a valid number");
+							return;
+						}
+						
+						placeNode(graphData, lastInput);
 					}
-					
-					placeNode(graphData, lastInput);
+				} else {
+					if(sourceNodeId < 1 || sourceNodeId > GraphData.STATION_COUNT) {
+						sourceNodeId = getNodeAtMousePosition(graphData);
+					} else {
+						int targetNodeId = getNodeAtMousePosition(graphData);
+						if(targetNodeId >= 1 && targetNodeId <= GraphData.STATION_COUNT && targetNodeId != sourceNodeId) {
+							int chosen = JOptionPane.showConfirmDialog(null, 
+									"Create a link between " + sourceNodeId + " and " + targetNodeId + "?", 
+									"Confirm link creation", JOptionPane.OK_CANCEL_OPTION);
+							if(chosen == JOptionPane.OK_OPTION)
+								graphData.createLink(sourceNodeId, targetNodeId, getSelectedLinkType(), null);
+						}
+						sourceNodeId = 0;
+					}
 				}
 			}
 		};
@@ -169,6 +233,10 @@ public class GraphDataInput {
 				try {
 					graphData.store("res/sy_map.data");
 					System.out.println("Missing stations: " + graphData.getUnsetStations());
+					System.out.println("Number of taxi links: " + graphData.getNumberOfLinks(StationLink.TAXI_LINK));
+					System.out.println("Number of bus links: " + graphData.getNumberOfLinks(StationLink.BUS_LINK));
+					System.out.println("Number of underground links: " + graphData.getNumberOfLinks(StationLink.UNDERGROUND_LINK));
+					System.out.println("Number of boat links: " + graphData.getNumberOfLinks(StationLink.BOAT_LINK));
 				} catch (IOException e) {
 					e.printStackTrace();
 				}

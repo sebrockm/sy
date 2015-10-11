@@ -1,6 +1,7 @@
 package map.data;
 
 import java.awt.Shape;
+import java.awt.geom.Path2D;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -11,6 +12,7 @@ import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.LinkedList;
 
 
 public class GraphData implements Serializable {
@@ -51,6 +53,19 @@ public class GraphData implements Serializable {
 		return stations[nodeNumber - 1].getArea();
 	}
 	
+	public int getNodeAtPosition(double x, double y) {
+		for(int i = 1; i <= stations.length; ++i) {
+			Shape area = getArea(i);
+			if(area == null)
+				continue;
+			
+			if(area.contains(x, y))
+				return i;
+		}
+		
+		return 0;
+	}
+	
 	
 	// ----------------------------------------------------------------------------------------------------------
 	// this section is for creating graph data during development
@@ -73,23 +88,42 @@ public class GraphData implements Serializable {
 		stations[nodeNumber - 1] = new StationNode(nodeNumber, area);
 	}
 	
-	public void createLink(int sourceNodeNumber, int targetNodeNumber, int linkType) {
-		checkNodeNumber(sourceNodeNumber);
-		checkNodeNumber(targetNodeNumber);
+	public void createLink(int nodeNumber1, int nodeNumber2, int linkType, Path2D path) {
+		checkNodeNumber(nodeNumber1);
+		checkNodeNumber(nodeNumber2);
 		
-		StationNode sourceNode = stations[sourceNodeNumber - 1];
-		StationNode targetNode = stations[targetNodeNumber - 1];
+		StationNode node1 = stations[nodeNumber1 - 1];
+		StationNode node2 = stations[nodeNumber2 - 1];
 		
-		if(sourceNode == null)
-			throw new NullPointerException("Station node " + sourceNodeNumber + " has not been created yet.");
+		if(node1 == null)
+			throw new NullPointerException("Station node " + nodeNumber1 + " has not been created yet.");
 		
-		if(targetNode == null)
-			throw new NullPointerException("Station node " + targetNodeNumber + " has not been created yet.");
+		if(node2 == null)
+			throw new NullPointerException("Station node " + nodeNumber2 + " has not been created yet.");
 		
-		StationLink link = new StationLink(sourceNode, targetNode, linkType);
+		StationLink link1 = new StationLink(node1, node2, linkType, path);
+		StationLink link2 = new StationLink(node2, node1, linkType, path);
 
-		adjacencyList[sourceNodeNumber - 1].add(link);
-		adjacencyList[targetNodeNumber - 1].add(link);
+		boolean added1 = adjacencyList[nodeNumber1 - 1].add(link1);
+		boolean added2 = adjacencyList[nodeNumber2 - 1].add(link2);
+		
+		if(!added1 && !added2) {
+			System.err.println("Link already exists!");
+		} else if(added1 ^ added2) {
+			throw new RuntimeException("Link consistency error!");
+		}
+	}
+	
+	public void removeAllLinks(int linkType) {		
+		for(int i = 0; i < adjacencyList.length; ++i) {
+			LinkedList<StationLink> toRemove = new LinkedList<StationLink>();
+			for(StationLink l : adjacencyList[i]) {
+				if(l.getLinkType() == linkType) {
+					toRemove.add(l);
+				}
+			}
+			adjacencyList[i].removeAll(toRemove);
+		}
 	}
 	
 	public void store(String fileName) throws FileNotFoundException, IOException {
@@ -106,5 +140,17 @@ public class GraphData implements Serializable {
 				result.add(i + 1);
 		
 		return result;
+	}
+	
+	public int getNumberOfLinks(int linkType) {
+		int counter = 0;
+		for(int i = 0; i < adjacencyList.length; ++i) {
+			for(StationLink l : adjacencyList[i]) {
+				if(l.getLinkType() == linkType) {
+					++counter;
+				}
+			}
+		}
+		return counter / 2;
 	}
 }

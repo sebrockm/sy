@@ -21,12 +21,26 @@ public class StationNode implements Serializable {
 	public Shape getArea() {
 		return area;
 	}
-	
+
 	@Override
-	public boolean equals(Object other) {
-		if(!(other instanceof StationNode))
-			return super.equals(other);
-		
-		return number == ((StationNode)other).number;
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + number;
+		return result;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (!(obj instanceof StationNode))
+			return false;
+		StationNode other = (StationNode) obj;
+		if (number != other.number)
+			return false;
+		return true;
 	}
 }
