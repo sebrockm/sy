@@ -56,7 +56,7 @@ public class MrXPlayer extends Player {
 	@Override
 	public boolean isVisible() {
 		switch(numberOfMovesDone) {
-		case 3: case 8: case 13: case 18: case 25: return true;
+		case 3: case 8: case 13: case 18: case 24: return true;
 		default: return false;
 		}
 	}

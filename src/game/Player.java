@@ -19,7 +19,7 @@ public class Player {
 	}
 	
 	protected void throwTooFewTickets() {
-		throw new IllegalStateException("Player had not enough of these tickets.");
+		throw new IllegalStateException("Player did not have enough of these tickets.");
 	}
 	
 	protected void decrementTicketCounter(int ticketType) {		
