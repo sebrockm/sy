@@ -1,6 +1,6 @@
 package gui.dev;
 
-import gui.ImageComponent;
+import gui.GamePlayComponent;
 
 import java.awt.Dimension;
 import java.awt.Graphics;
@@ -35,7 +35,7 @@ public class GraphDataInput {
 	private static int currentMouseX, currentMouseY;
 	private static int sourceNodeId;
 	
-	private static ImageComponent mapImage;
+	private static GamePlayComponent mapImage;
 	private static JMenuBar menuBar;
 	
 	private static JRadioButton addNodesButton;
@@ -153,7 +153,7 @@ public class GraphDataInput {
 		frame.setJMenuBar(menuBar);
 
 		try {
-			mapImage = new ImageComponent();
+			mapImage = new GamePlayComponent();
 		} catch (IOException e) {
 			e.printStackTrace();
 			System.exit(0);

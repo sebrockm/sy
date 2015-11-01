@@ -21,7 +21,7 @@ import javax.swing.event.MouseInputAdapter;
 
 import map.data.GraphData;
 
-public class ImageComponent extends JComponent {
+public class GamePlayComponent extends JComponent {
 	private static final long serialVersionUID = 1L;
 	
 	private static final String mapPath = "res/sy_map.jpg";
@@ -38,7 +38,7 @@ public class ImageComponent extends JComponent {
 	
 	private Shape highlightedArea = null;
 
-	public ImageComponent() throws IOException {
+	public GamePlayComponent() throws IOException {
 		super();
 		
 		setDefaultScale();

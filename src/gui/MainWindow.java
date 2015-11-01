@@ -12,6 +12,7 @@ import javax.swing.JFrame;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
+import javax.swing.JOptionPane;
 
 public class MainWindow {
 
@@ -28,7 +29,7 @@ public class MainWindow {
 	}
 
 	private final JFrame frame = new JFrame();
-	private final ImageComponent mapImage;
+	private final GamePlayComponent mapImage;
 	private final JMenuItem newGameMenuItem;
 	
 	private GameStatus gameStatus = null;
@@ -37,7 +38,7 @@ public class MainWindow {
 	public MainWindow() throws IOException {
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		
-		mapImage = new ImageComponent();
+		mapImage = new GamePlayComponent();
 		frame.add(mapImage);
 		
 		JMenuBar menuBar = new JMenuBar();
@@ -55,6 +56,7 @@ public class MainWindow {
 						@Override
 						public void run() {
 							gameStatus = newGameWindow.waitForGameStatus();
+							startGame();
 						}
 					}).start();
 				}
@@ -63,6 +65,15 @@ public class MainWindow {
 		
 		setDefaultFramePosition();
 		frame.setVisible(true);
+	}
+	
+	private void startGame() {
+		if(gameStatus == null) {
+			JOptionPane.showMessageDialog(frame, "Create a new game first.");
+			return;
+		}
+		
+		// TODO
 	}
 	
 	private void setDefaultFramePosition() {
