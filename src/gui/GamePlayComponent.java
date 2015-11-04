@@ -1,6 +1,7 @@
 package gui;
 
 import java.awt.Color;
+import java.awt.GradientPaint;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Rectangle;
@@ -37,6 +38,7 @@ public class GamePlayComponent extends JComponent {
 	private double topLeftCornerY;
 	
 	private Shape highlightedArea = null;
+	private int playerField = 1;
 
 	public GamePlayComponent() throws IOException {
 		super();
@@ -137,13 +139,30 @@ public class GamePlayComponent extends JComponent {
 		
         Graphics2D g2 = (Graphics2D)g;
         
-        AffineTransform at = fromImageToOuterTransform();
-        
+        AffineTransform at = fromImageToOuterTransform();     
         g2.drawRenderedImage(mapImage, at);
+           
+        drawPlayerTokens(g2);
         
         if(highlightedArea != null) {
 	        drawHighlightedArea(highlightedArea, g2);
         }
+	}
+	
+	private void drawPlayerTokens(Graphics2D g2) {
+		Rectangle2D r = graphData.getArea(playerField).getBounds2D();
+		double atY = r.getMinY() - TokenShape.getHeight() + r.getHeight();
+        AffineTransform at = AffineTransform.getTranslateInstance(r.getMinX(), atY);
+        
+        Shape transformedToken = at.createTransformedShape(TokenShape.getInstance());
+		at = fromImageToOuterTransform();
+        transformedToken = at.createTransformedShape(transformedToken);
+
+        Rectangle2D bb = transformedToken.getBounds2D();
+        float cx = (float)bb.getCenterX();
+        
+        g2.setPaint(new GradientPaint(cx, (float)bb.getMaxY(), Color.BLACK, cx, (float)bb.getMinY(), Color.RED));
+        g2.fill(transformedToken);
 	}
 	
 	private void drawHighlightedArea(Shape area, Graphics2D g2) {
