@@ -1,5 +1,7 @@
 package game;
 
+import java.awt.Color;
+
 public class MrXPlayer extends Player {
 	private int numberOfBlackTickets;
 	private int numberOfDoubleMoves;
@@ -27,7 +29,7 @@ public class MrXPlayer extends Player {
 			int numberOfTaxiTickets, int numberOfBusTickets, int numberOfUndergroundTickets,
 			int numberOfBlackTickets, int numberOfDoubleMoves) {
 		
-		super(startStationId, name, numberOfTaxiTickets, numberOfBusTickets, numberOfUndergroundTickets);
+		super(startStationId, name, Color.BLACK, numberOfTaxiTickets, numberOfBusTickets, numberOfUndergroundTickets);
 		this.numberOfBlackTickets = numberOfBlackTickets;
 		this.numberOfDoubleMoves = numberOfDoubleMoves;
 		numberOfMovesDone = 0;

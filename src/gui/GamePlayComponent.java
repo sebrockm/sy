@@ -1,5 +1,7 @@
 package gui;
 
+import game.Player;
+
 import java.awt.Color;
 import java.awt.GradientPaint;
 import java.awt.Graphics;
@@ -38,8 +40,9 @@ public class GamePlayComponent extends JComponent {
 	private double topLeftCornerY;
 	
 	private Shape highlightedArea = null;
-	private int playerField = 1;
 
+	private Player[] players = null;
+	
 	public GamePlayComponent() throws IOException {
 		super();
 		
@@ -150,19 +153,27 @@ public class GamePlayComponent extends JComponent {
 	}
 	
 	private void drawPlayerTokens(Graphics2D g2) {
-		Rectangle2D r = graphData.getArea(playerField).getBounds2D();
-		double atY = r.getMinY() - TokenShape.getHeight() + r.getHeight();
-        AffineTransform at = AffineTransform.getTranslateInstance(r.getMinX(), atY);
-        
-        Shape transformedToken = at.createTransformedShape(TokenShape.getInstance());
-		at = fromImageToOuterTransform();
-        transformedToken = at.createTransformedShape(transformedToken);
-
-        Rectangle2D bb = transformedToken.getBounds2D();
-        float cx = (float)bb.getCenterX();
-        
-        g2.setPaint(new GradientPaint(cx, (float)bb.getMaxY(), Color.BLACK, cx, (float)bb.getMinY(), Color.RED));
-        g2.fill(transformedToken);
+		if(players == null)
+			return;
+		
+		for(Player player : players) {
+			if(!player.isVisible())
+				continue;
+			
+			Rectangle2D r = graphData.getArea(player.getCurrentStationId()).getBounds2D();
+			double atY = r.getMinY() - TokenShape.getHeight() + r.getHeight();
+	        AffineTransform at = AffineTransform.getTranslateInstance(r.getMinX(), atY);
+	        
+	        Shape transformedToken = at.createTransformedShape(TokenShape.getInstance());
+			at = fromImageToOuterTransform();
+	        transformedToken = at.createTransformedShape(transformedToken);
+	
+	        Rectangle2D bb = transformedToken.getBounds2D();
+	        float cx = (float)bb.getCenterX();
+	        
+	        g2.setPaint(new GradientPaint(cx, (float)bb.getMaxY(), Color.BLACK, cx, (float)bb.getMinY(), player.getColor()));
+	        g2.fill(transformedToken);
+		}
 	}
 	
 	private void drawHighlightedArea(Shape area, Graphics2D g2) {
@@ -231,5 +242,9 @@ public class GamePlayComponent extends JComponent {
 	public void translate(double dx, double dy) {
 		topLeftCornerX += dx;
 		topLeftCornerY += dy;
+	}
+	
+	public void setPlayers(Player[] players) {
+		this.players = players;
 	}
 }

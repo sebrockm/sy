@@ -29,7 +29,7 @@ public class MainWindow {
 	}
 
 	private final JFrame frame = new JFrame();
-	private final GamePlayComponent mapImage;
+	private final GamePlayComponent gamePlay;
 	private final JMenuItem newGameMenuItem;
 	
 	private GameStatus gameStatus = null;
@@ -38,8 +38,8 @@ public class MainWindow {
 	public MainWindow() throws IOException {
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		
-		mapImage = new GamePlayComponent();
-		frame.add(mapImage);
+		gamePlay = new GamePlayComponent();
+		frame.add(gamePlay);
 		
 		JMenuBar menuBar = new JMenuBar();
 		JMenu gameMenu = menuBar.add(new JMenu("Game"));
@@ -56,7 +56,8 @@ public class MainWindow {
 						@Override
 						public void run() {
 							gameStatus = newGameWindow.waitForGameStatus();
-							startGame();
+							if(gameStatus != null)
+								startGame();
 						}
 					}).start();
 				}
@@ -73,7 +74,7 @@ public class MainWindow {
 			return;
 		}
 		
-		// TODO
+		gamePlay.setPlayers(gameStatus.getPlayers());
 	}
 	
 	private void setDefaultFramePosition() {

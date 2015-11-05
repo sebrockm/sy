@@ -1,9 +1,10 @@
 package game;
 
+import java.awt.Color;
 import java.util.LinkedList;
 
 public class GameStatus {
-	private final LinkedList<Player> players = new LinkedList<Player>();
+	private final LinkedList<Player> players = new LinkedList<>();
 	private final int agentTaxiTickets;
 	private final int mrXTaxiTickets;
 	private final int agentBusTickets;
@@ -37,8 +38,8 @@ public class GameStatus {
 		return players.getFirst();
 	}
 	
-	public void addAgent(int startStationId, String name) {
-		players.addLast(new Player(startStationId, name, 
+	public void addAgent(int startStationId, String name, Color color) {
+		players.addLast(new Player(startStationId, name, color,
 				agentTaxiTickets, agentBusTickets, agentUndergroundTickets));
 	}
 	
@@ -70,5 +71,9 @@ public class GameStatus {
 		
 		MrXPlayer mrX = (MrXPlayer) getCurrentPlayer();
 		return mrX.getNumberOfDoubleMoves() > 0;
+	}
+	
+	public Player[] getPlayers() {
+		return players.toArray(new Player[players.size()]);
 	}
 }

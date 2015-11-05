@@ -3,6 +3,7 @@ package gui;
 import game.GameStatus;
 
 import java.awt.BorderLayout;
+import java.awt.Color;
 import java.awt.Component;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
@@ -33,19 +34,29 @@ public class NewGameWindow extends JFrame {
 	 */
 	private static final long serialVersionUID = 1L;
 	
+	private static final String[] choosableColorStrings = 
+		{ "red", "orange", "yellow", "green", "blue", "puple", "cyan",  "white"};
+	private static final Color[] choosableColors =
+		{ Color.red, Color.orange, Color.yellow.brighter(), Color.green, 
+		Color.blue, Color.magenta.darker(), Color.cyan,  Color.white};
+	
+	private static final int maxAgentCount = choosableColorStrings.length;
+	private static final int minAgentCount = 4;
+	
 	private final JComboBox<String> agentCountDropBox = new JComboBox<String>();
 	
 	private final JTextField mrXTextField = new JTextField();
 	private final JCheckBox mrXNetworkCheckBox = new JCheckBox("Network Player", true);
 	private final LinkedList<JTextField> agentTextFields = new LinkedList<>();
-	private final LinkedList<JCheckBox> agentNetworkCheckBox = new LinkedList<>();
+	private final LinkedList<JComboBox<String>> agentColors = new LinkedList<>();
+	private final LinkedList<JCheckBox> agentNetworkCheckBoxes = new LinkedList<>();
 	
 	private final JPanel playerPanel = new JPanel();
-	private final GridLayout playerPanelLayout = new GridLayout(1, 3);
+	private final GridLayout playerPanelLayout = new GridLayout(1, 4);
 	private int agentRows = 0;
 	private final LinkedList<Component> componentStack = new LinkedList<Component>();
 	
-	private final JButton okButton = new JButton("OK");
+	private final JButton okButton = new JButton("Start");
 	private final Lock lock = new ReentrantLock();
 	private final Condition gameStatusIsReady = lock.newCondition();
 	private boolean okClicked = false;
@@ -75,7 +86,7 @@ public class NewGameWindow extends JFrame {
 	private void initOkButton() {
 		okButton.addActionListener(new ActionListener() {
 			@Override
-			public void actionPerformed(ActionEvent arg0) {
+			public void actionPerformed(ActionEvent e) {
 				if(isInputValid()) {
 					lock.lock();
 					try {
@@ -95,6 +106,12 @@ public class NewGameWindow extends JFrame {
 	}
 	
 	private boolean isInputValid() {
+		for(int i = 0; i < agentRows; ++i) {
+			for(int j = i + 1; j < agentRows; ++j) {
+				if(agentColors.get(i).getSelectedIndex() == agentColors.get(j).getSelectedIndex())
+					return false;
+			}
+		}
 		return true;
 	}
 	
@@ -109,19 +126,24 @@ public class NewGameWindow extends JFrame {
 		gameStatus.addMrX(randomNumbers.removeFirst(), mrXTextField.getText());
 		
 		assert(agentRows == agentTextFields.size());
-		for(JTextField field : agentTextFields)
-			gameStatus.addAgent(randomNumbers.removeFirst(), field.getText());
+		assert(agentRows == agentColors.size());
+		for(int i = 0; i < agentRows; ++i) {
+			String name = agentTextFields.get(i).getText();
+			Color color = choosableColors[agentColors.get(i).getSelectedIndex()];
+			
+			gameStatus.addAgent(randomNumbers.removeFirst(), name, color);
+		}
 	}
 	
 	private void initAgentCountDropBox() {
-		for(int i = 4; i <= 9; ++i)
+		for(int i = minAgentCount; i <= maxAgentCount; ++i)
 			agentCountDropBox.addItem("Number of Agents: " + i);
 		
 		agentCountDropBox.setSelectedIndex(0);
 		agentCountDropBox.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				int newAgentRows = agentCountDropBox.getSelectedIndex() + 4;
+				int newAgentRows = agentCountDropBox.getSelectedIndex() + minAgentCount;
 				NewGameWindow.this.setAgentRows(newAgentRows);
 				NewGameWindow.this.pack();
 			}
@@ -137,6 +159,7 @@ public class NewGameWindow extends JFrame {
 		label.setPreferredSize(label.getSize());
 		playerPanel.add(label);
 		playerPanel.add(mrXTextField);
+		playerPanel.add(new JPanel());
 		playerPanel.add(mrXNetworkCheckBox);
 		
 		setAgentRows(4);
@@ -154,12 +177,17 @@ public class NewGameWindow extends JFrame {
 		text.setText("");
 		agentTextFields.addLast(text);
 		
+		JComboBox<String> colorDropDown = new JComboBox<>(choosableColorStrings);
+		colorDropDown.setSelectedIndex(agentRows - 1);
+		agentColors.addLast(colorDropDown);
+		
 		JCheckBox checkBox = new JCheckBox("Network Player");
 		checkBox.setPreferredSize(checkBox.getPreferredSize());
-		agentNetworkCheckBox.addLast(checkBox);
+		agentNetworkCheckBoxes.addLast(checkBox);
 		
 		componentStack.addLast(playerPanel.add(label));
 		componentStack.addLast(playerPanel.add(text));
+		componentStack.addLast(playerPanel.add(colorDropDown));
 		componentStack.addLast(playerPanel.add(checkBox));
 	}
 	
@@ -174,7 +202,8 @@ public class NewGameWindow extends JFrame {
 			playerPanel.remove(componentStack.removeLast());
 		
 		agentTextFields.removeLast();
-		agentNetworkCheckBox.removeLast();
+		agentColors.removeLast();
+		agentNetworkCheckBoxes.removeLast();
 	}
 	
 	private void setAgentRows(int newAgentRows) {
@@ -193,6 +222,7 @@ public class NewGameWindow extends JFrame {
 			while(!okClicked)
 				gameStatusIsReady.awaitUninterruptibly();
 		} finally {
+			okClicked = false;
 			lock.unlock();
 		}
 		

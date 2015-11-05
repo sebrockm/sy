@@ -1,5 +1,7 @@
 package game;
 
+import java.awt.Color;
+
 public class Player {
 	public static final int TAXI_TICKET = 1;
 	public static final int BUS_TICKET = 2;
@@ -8,6 +10,7 @@ public class Player {
 	
 	private int currentStationId;
 	private final String name;
+	private final Color color;
 	
 	private int numberOfTaxiTickets;
 	private int numberOfBusTickets;
@@ -31,11 +34,12 @@ public class Player {
 		}
 	}
 	
-	public Player(int startStationId, String name, 
+	public Player(int startStationId, String name, Color color,
 			int numberOfTaxiTickets, int numberOfBusTickets, int numberOfUndergroundTickets) {
 		
 		currentStationId = startStationId;
 		this.name = name;
+		this.color = color;
 		this.numberOfTaxiTickets = numberOfTaxiTickets;
 		this.numberOfBusTickets = numberOfBusTickets;
 		this.numberOfUndergroundTickets = numberOfUndergroundTickets;
@@ -53,6 +57,10 @@ public class Player {
 	
 	public String getName() {
 		return name;
+	}
+	
+	public Color getColor() {
+		return color;
 	}
 	
 	public int getNumberOfTaxiTickets() {
