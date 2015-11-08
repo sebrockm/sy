@@ -8,7 +8,6 @@ import java.awt.Font;
 import java.awt.GradientPaint;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
-import java.awt.MenuBar;
 import java.awt.Rectangle;
 import java.awt.Shape;
 import java.awt.event.MouseEvent;
@@ -157,7 +156,7 @@ public class GamePlayComponent extends JComponent {
         drawPlayerInfo(g2);
 	}
 	
-	void drawPlayerInfo(Graphics2D g2) {
+	private void drawPlayerInfo(Graphics2D g2) {
 		if(players == null)
 			return;
 		
@@ -165,10 +164,10 @@ public class GamePlayComponent extends JComponent {
 		Font font = new Font("Dialog", Font.PLAIN, fontSize);
         g2.setFont(font);
         
-        final String header = "Name         Taxi Bus Underground Black Double";
-        final String dummy2 = "Taxi Bus Underground Black Double";
-        final String dummy3 = "Bus Underground Black Double";
-        final String dummy4 = "Underground Black Double";
+        final String header = "Name         Taxi Bus U-Ground Black Double";
+        final String dummy2 = "Taxi Bus U-Ground Black Double";
+        final String dummy3 = "Bus U-Ground Black Double";
+        final String dummy4 = "U-Ground Black Double";
         final String dummy5 = "Black Double";
         final String dummy6 = "Double";
         
@@ -183,7 +182,7 @@ public class GamePlayComponent extends JComponent {
         g2.drawString(header, p1, fontSize);
         
         for(int i = 0; i < players.length; ++i) {
-        	float yOffset = fontSize * (i + 2.2f);
+        	float yOffset = fontSize * (i + 2.3f);
         	g2.setColor(players[i].getColor());
         	
         	g2.drawString(players[i].getName(), p1, yOffset);
