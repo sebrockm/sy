@@ -2,8 +2,6 @@ package gui;
 
 import game.GameStatus;
 
-import java.awt.Dimension;
-import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.IOException;
@@ -74,7 +72,7 @@ public class MainWindow {
 			return;
 		}
 		
-		gamePlay.setPlayers(gameStatus.getPlayers());
+		gamePlay.setGameStatus(gameStatus);
 	}
 	
 	private void setDefaultFramePosition() {

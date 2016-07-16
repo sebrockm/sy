@@ -5,6 +5,7 @@ import java.util.LinkedList;
 
 public class GameStatus {
 	private final LinkedList<Player> players = new LinkedList<>();
+	private int currentPlayerId = 0;
 	private final int agentTaxiTickets;
 	private final int mrXTaxiTickets;
 	private final int agentBusTickets;
@@ -30,12 +31,11 @@ public class GameStatus {
 	}
 	
 	private void nextPlayer() {
-		Player current = players.removeFirst();
-		players.addLast(current);
+		currentPlayerId = (currentPlayerId + 1) % players.size();
 	}
 	
-	private Player getCurrentPlayer() {
-		return players.getFirst();
+	public Player getCurrentPlayer() {
+		return players.get(currentPlayerId);
 	}
 	
 	public void addAgent(int startStationId, String name, Color color) {
@@ -73,7 +73,7 @@ public class GameStatus {
 		return mrX.getNumberOfDoubleMoves() > 0;
 	}
 	
-	public Player[] getPlayers() {
-		return players.toArray(new Player[players.size()]);
+	public LinkedList<Player> getPlayers() {
+		return players;
 	}
 }

@@ -1,5 +1,6 @@
 package gui;
 
+import game.GameStatus;
 import game.MrXPlayer;
 import game.Player;
 
@@ -10,8 +11,6 @@ import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Rectangle;
 import java.awt.Shape;
-import java.awt.event.MouseEvent;
-import java.awt.event.MouseWheelEvent;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
@@ -21,8 +20,6 @@ import java.io.IOException;
 
 import javax.imageio.ImageIO;
 import javax.swing.JComponent;
-import javax.swing.SwingUtilities;
-import javax.swing.event.MouseInputAdapter;
 
 import map.data.GraphData;
 
@@ -43,7 +40,7 @@ public class GamePlayComponent extends JComponent {
 	
 	private Shape highlightedArea = null;
 
-	private Player[] players = null;
+	private GameStatus gameStatus = null;
 	
 	public GamePlayComponent() throws IOException {
 		super();
@@ -62,75 +59,7 @@ public class GamePlayComponent extends JComponent {
 		setVisible(true);
 		setDoubleBuffered(true);
 		
-		MouseInputAdapter mouseInputAdapter = new MouseInputAdapter() {
-			private int lastX;
-			private int lastY;
-			
-			@Override
-			public void mousePressed(MouseEvent e) {
-				if(SwingUtilities.isLeftMouseButton(e)) {
-					lastX = e.getX();
-					lastY = e.getY();
-				}
-			}
-
-			@Override
-			public void mouseDragged(MouseEvent e) {
-				setHighlighted(e);
-				if(SwingUtilities.isLeftMouseButton(e)) {
-					translate(e.getX() - lastX, e.getY() - lastY);
-					lastX = e.getX();
-					lastY = e.getY();
-					repaint();
-				}
-			}
-			
-			@Override
-			public void mouseWheelMoved(MouseWheelEvent e) {
-				if(e.getWheelRotation() < 0)
-					for(int i = 0; i < -e.getWheelRotation(); ++i)
-						zoomIn(e.getX(), e.getY());
-				else
-					for(int i = 0; i < e.getWheelRotation(); ++i)
-						zoomOut(e.getX(), e.getY());
-				
-				setHighlighted(e);
-				repaint();
-			}
-			
-			@Override
-			public void mouseMoved(MouseEvent e) {
-				if(setHighlighted(e))
-					repaint();
-			}
-			
-			private boolean setHighlighted(MouseEvent e) {
-				boolean changed = false;
-				int i;
-				for(i = 1; i <= GraphData.STATION_COUNT; ++i) {
-		        	Shape area = graphData.getArea(i);
-		        	if(area == null)
-		        		continue;
-		        	
-		        	area = fromImageToOuterTransform().createTransformedShape(area);
-		        	
-		        	if(area.contains(e.getX(), e.getY())) {
-		        		if(area != highlightedArea) {
-		        			highlightedArea = area;
-		        			changed = true;
-		        		}
-		        		break;
-		        	}
-				}
-				
-				if(i > GraphData.STATION_COUNT && highlightedArea != null) {
-					highlightedArea = null;
-					changed = true;
-				}
-				
-				return changed;
-			}
-		};
+		GamePlayMouseInputAdapter mouseInputAdapter = new GamePlayMouseInputAdapter(this);
 		addMouseListener(mouseInputAdapter);
 		addMouseMotionListener(mouseInputAdapter);
 		addMouseWheelListener(mouseInputAdapter);
@@ -157,7 +86,7 @@ public class GamePlayComponent extends JComponent {
 	}
 	
 	private void drawPlayerInfo(Graphics2D g2) {
-		if(players == null)
+		if(gameStatus == null)
 			return;
 		
 		final int fontSize = 17;
@@ -165,45 +94,52 @@ public class GamePlayComponent extends JComponent {
         g2.setFont(font);
         
         final String header = "Name         Taxi Bus U-Ground Black Double";
-        final String dummy2 = "Taxi Bus U-Ground Black Double";
-        final String dummy3 = "Bus U-Ground Black Double";
-        final String dummy4 = "U-Ground Black Double";
-        final String dummy5 = "Black Double";
-        final String dummy6 = "Double";
+        final String starDummy = "*Name         Taxi Bus U-Ground Black Double";
+        final String taxiDummy = "Taxi Bus U-Ground Black Double";
+        final String busDummy = "Bus U-Ground Black Double";
+        final String uGroundDummy = "U-Ground Black Double";
+        final String blackDummy = "Black Double";
+        final String doubleDummy = "Double";
         
-        final float p1 = getWidth() - (float)g2.getFontMetrics().getStringBounds(header, g2).getWidth();
-        final float p2 = getWidth() - (float)g2.getFontMetrics().getStringBounds(dummy2, g2).getWidth();
-        final float p3 = getWidth() - (float)g2.getFontMetrics().getStringBounds(dummy3, g2).getWidth();
-        final float p4 = getWidth() - (float)g2.getFontMetrics().getStringBounds(dummy4, g2).getWidth();
-        final float p5 = getWidth() - (float)g2.getFontMetrics().getStringBounds(dummy5, g2).getWidth();
-        final float p6 = getWidth() - (float)g2.getFontMetrics().getStringBounds(dummy6, g2).getWidth();
+        final float starOffset = getWidth() - (float)g2.getFontMetrics().getStringBounds(starDummy, g2).getWidth();
+        final float nameOffset = getWidth() - (float)g2.getFontMetrics().getStringBounds(header, g2).getWidth();
+        final float taxiOffset = getWidth() - (float)g2.getFontMetrics().getStringBounds(taxiDummy, g2).getWidth();
+        final float busOffset = getWidth() - (float)g2.getFontMetrics().getStringBounds(busDummy, g2).getWidth();
+        final float uGroundOffset = getWidth() - (float)g2.getFontMetrics().getStringBounds(uGroundDummy, g2).getWidth();
+        final float blackOffset = getWidth() - (float)g2.getFontMetrics().getStringBounds(blackDummy, g2).getWidth();
+        final float doubleOffset = getWidth() - (float)g2.getFontMetrics().getStringBounds(doubleDummy, g2).getWidth();
         
         g2.setColor(Color.BLACK);
-        g2.drawString(header, p1, fontSize);
+        g2.drawString(header, nameOffset, fontSize);
         
-        for(int i = 0; i < players.length; ++i) {
-        	float yOffset = fontSize * (i + 2.3f);
-        	g2.setColor(players[i].getColor());
+        for(int i = 0; i < gameStatus.getPlayers().size(); ++i) {
+        	Player player = gameStatus.getPlayers().get(i);
         	
-        	g2.drawString(players[i].getName(), p1, yOffset);
-        	g2.drawString(players[i].getNumberOfTaxiTickets() + "", p2, yOffset);
-        	g2.drawString(players[i].getNumberOfBusTickets() + "", p3, yOffset);
-        	g2.drawString(players[i].getNumberOfUndergroundTickets() + "", p4, yOffset);
-        	if(players[i] instanceof MrXPlayer) {
-        		MrXPlayer mrX = (MrXPlayer) players[i];
-        		g2.drawString(mrX.getNumberOfBlackTickets() + "", p5, yOffset);
-        		g2.drawString(mrX.getNumberOfDoubleMoves() + "", p6, yOffset);
+        	float yOffset = fontSize * (i + 2.3f);
+        	g2.setColor(player.getColor());
+        	
+        	if (player == gameStatus.getCurrentPlayer())
+        		g2.drawString("*", starOffset, yOffset);
+        	
+        	g2.drawString(player.getName(), nameOffset, yOffset);
+        	g2.drawString(player.getNumberOfTaxiTickets() + "", taxiOffset, yOffset);
+        	g2.drawString(player.getNumberOfBusTickets() + "", busOffset, yOffset);
+        	g2.drawString(player.getNumberOfUndergroundTickets() + "", uGroundOffset, yOffset);
+        	if(player instanceof MrXPlayer) {
+        		MrXPlayer mrX = (MrXPlayer) player;
+        		g2.drawString(mrX.getNumberOfBlackTickets() + "", blackOffset, yOffset);
+        		g2.drawString(mrX.getNumberOfDoubleMoves() + "", doubleOffset, yOffset);
         	}
         }
 	}
 	
 	private void drawPlayerTokens(Graphics2D g2) {
-		if(players == null)
+		if(gameStatus == null)
 			return;
 		
-		for(Player player : players) {
-			if(!player.isVisible())
-				continue;
+		for(Player player : gameStatus.getPlayers()) {
+			//if(!player.isVisible())
+				//continue;
 			
 			Rectangle2D r = graphData.getArea(player.getCurrentStationId()).getBounds2D();
 			double atY = r.getMinY() - TokenShape.getHeight() + r.getHeight();
@@ -289,7 +225,34 @@ public class GamePlayComponent extends JComponent {
 		topLeftCornerY += dy;
 	}
 	
-	public void setPlayers(Player[] players) {
-		this.players = players;
+	public void setGameStatus(GameStatus gameStatus) {
+		this.gameStatus = gameStatus;
+	}
+	
+	public boolean setHighlightAt(int x, int y) {
+		boolean changed = false;
+		int i;
+		for(i = 1; i <= GraphData.STATION_COUNT; ++i) {
+        	Shape area = graphData.getArea(i);
+        	if(area == null)
+        		continue;
+        	
+        	area = fromImageToOuterTransform().createTransformedShape(area);
+        	
+        	if(area.contains(x, y)) {
+        		if(area != highlightedArea) {
+        			highlightedArea = area;
+        			changed = true;
+        		}
+        		break;
+        	}
+		}
+		
+		if(i > GraphData.STATION_COUNT && highlightedArea != null) {
+			highlightedArea = null;
+			changed = true;
+		}
+		
+		return changed;
 	}
 }
