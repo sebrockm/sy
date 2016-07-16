@@ -53,6 +53,43 @@ public class GraphData implements Serializable {
 		return stations[nodeNumber - 1].getArea();
 	}
 	
+	private LinkedList<Shape> getAdjacentAreas(int nodeNumber, int linkType) {
+		checkNodeNumber(nodeNumber);
+		
+		HashSet<StationLink> stationLinks = adjacencyList[nodeNumber - 1];
+		
+		LinkedList<Shape> adjacentNodes = new LinkedList<Shape>();
+		for (StationLink link : stationLinks) {
+			if ((link.getLinkType() & linkType) != 0) {
+				if (link.getSourceStation().getNumber() == nodeNumber)
+					adjacentNodes.add(link.getTargetStation().getArea());
+				else
+					adjacentNodes.add(link.getSourceStation().getArea());
+			}
+		}
+		return adjacentNodes;
+	}
+	
+	public LinkedList<Shape> getAdjacentTaxiAreas(int nodeNumber) {
+		return getAdjacentAreas(nodeNumber, StationLink.TAXI_LINK);
+	}
+	
+	public LinkedList<Shape> getAdjacentBusAreas(int nodeNumber) {
+		return getAdjacentAreas(nodeNumber, StationLink.BUS_LINK);
+	}
+	
+	public LinkedList<Shape> getAdjacentUndergroundAreas(int nodeNumber) {
+		return getAdjacentAreas(nodeNumber, StationLink.UNDERGROUND_LINK);
+	}
+	
+	public LinkedList<Shape> getAllAdjacentAreas(int nodeNumber) {
+		return getAdjacentAreas(nodeNumber, 
+				StationLink.TAXI_LINK | StationLink.BUS_LINK | StationLink.UNDERGROUND_LINK | StationLink.BOAT_LINK);
+	}
+	
+	// ----------------------------------------------------------------------------------------------------------
+	// this section is for creating graph data during development
+	
 	public int getNodeAtPosition(double x, double y) {
 		for(int i = 1; i <= stations.length; ++i) {
 			Shape area = getArea(i);
@@ -65,10 +102,6 @@ public class GraphData implements Serializable {
 		
 		return 0;
 	}
-	
-	
-	// ----------------------------------------------------------------------------------------------------------
-	// this section is for creating graph data during development
 	
 	@SuppressWarnings("unchecked") // stupid java cannot create a generic type array...
 	public GraphData() {

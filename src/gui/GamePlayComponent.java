@@ -22,6 +22,7 @@ import javax.imageio.ImageIO;
 import javax.swing.JComponent;
 
 import map.data.GraphData;
+import map.data.StationNode;
 
 public class GamePlayComponent extends JComponent {
 	private static final long serialVersionUID = 1L;
@@ -80,6 +81,14 @@ public class GamePlayComponent extends JComponent {
         
         if(highlightedArea != null) {
 	        drawHighlightedArea(highlightedArea, g2);
+        }
+        
+        if (gameStatus != null) {
+        	int currentStationId = gameStatus.getCurrentPlayer().getCurrentStationId();
+	        for (Shape shape : graphData.getAllAdjacentAreas(currentStationId)) {
+	        	shape = fromImageToOuterTransform().createTransformedShape(shape);
+	        	drawHighlightedArea(shape, g2);
+	        }
         }
         
         drawPlayerInfo(g2);
@@ -170,8 +179,7 @@ public class GamePlayComponent extends JComponent {
     				continue;
     			
     			Point2D imageP = at.transform(p, null);
-    			Color pixelColor = new Color(mapImage.getRGB((int)imageP.getX(), (int)imageP.getY()), true);
-    			pixelColor = pixelColor.brighter();
+    			Color pixelColor = new Color(mapImage.getRGB((int)imageP.getX(), (int)imageP.getY()), true).brighter();
     			g2.setColor(pixelColor);
     			g2.draw(new Rectangle((int)p.getX(), (int)p.getY(), 1, 1));
     		}
