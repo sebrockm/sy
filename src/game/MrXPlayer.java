@@ -25,6 +25,12 @@ public class MrXPlayer extends Player {
 		}
 	}
 	
+	@Override
+	public void incrementTicketCounter(int ticketType) {
+		super.checkTicketType(ticketType);
+		super.incrementTicketCounter(ticketType);
+	}
+	
 	public MrXPlayer(int startStationId, String name, 
 			int numberOfTaxiTickets, int numberOfBusTickets, int numberOfUndergroundTickets,
 			int numberOfBlackTickets, int numberOfDoubleMoves) {

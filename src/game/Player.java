@@ -34,6 +34,15 @@ public class Player {
 		}
 	}
 	
+	protected void incrementTicketCounter(int ticketType) {
+		checkTicketType(ticketType);
+		switch(ticketType) {
+		case TAXI_TICKET: ++numberOfTaxiTickets; break;
+		case BUS_TICKET: ++numberOfBusTickets; break;
+		case UNDERGROUND_TICKET: ++numberOfUndergroundTickets; break;
+		}
+	}
+	
 	public Player(int startStationId, String name, Color color,
 			int numberOfTaxiTickets, int numberOfBusTickets, int numberOfUndergroundTickets) {
 		
