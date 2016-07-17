@@ -264,7 +264,7 @@ public class GamePlayComponent extends JComponent {
 	
 	public void receivePlayerClick(int x, int y) {
 		int clickedStationId = findStationId(x, y);
-		if (clickedStationId == 0)
+		if (clickedStationId == 0 || gameStatus.isPositionOccupiedbyAgent(clickedStationId))
 			return;
 		
 		Shape clickedStation = graphData.getArea(clickedStationId);

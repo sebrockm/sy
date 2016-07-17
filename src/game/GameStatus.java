@@ -76,4 +76,12 @@ public class GameStatus {
 	public LinkedList<Player> getPlayers() {
 		return players;
 	}
+	
+	public boolean isPositionOccupiedbyAgent(int stationId) {
+		for (Player player : players) {
+			if (!(player instanceof MrXPlayer) && player.getCurrentStationId() == stationId)
+				return true;
+		}
+		return false;
+	}
 }
