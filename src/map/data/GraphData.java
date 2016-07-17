@@ -159,6 +159,31 @@ public class GraphData implements Serializable {
 		}
 	}
 	
+	public void removeLink(int srcNodeId, int tgtNodeId, int linkType) {
+		checkNodeNumber(srcNodeId);
+		checkNodeNumber(tgtNodeId);
+		HashSet<StationLink> srcLinks = adjacencyList[srcNodeId - 1];
+		HashSet<StationLink> tgtLinks = adjacencyList[tgtNodeId - 1];
+		
+		for (StationLink link : srcLinks) {
+			if (link.getTargetStation().getNumber() == tgtNodeId && link.getLinkType() == linkType) {
+				srcLinks.remove(link);
+				System.out.println("removed link " + link.getSourceStation().getNumber() 
+						+ "->" + link.getTargetStation().getNumber());
+				break;
+			}
+		}
+		
+		for (StationLink link : tgtLinks) {
+			if (link.getTargetStation().getNumber() == srcNodeId && link.getLinkType() == linkType) {
+				tgtLinks.remove(link);
+				System.out.println("removed link " + link.getSourceStation().getNumber() 
+						+ "->" + link.getTargetStation().getNumber());
+				break;
+			}
+		}
+	}
+	
 	public void store(String fileName) throws FileNotFoundException, IOException {
 		ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(fileName));
 		oos.writeObject(this);
