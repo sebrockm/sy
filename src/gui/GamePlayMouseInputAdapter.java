@@ -22,6 +22,11 @@ public class GamePlayMouseInputAdapter extends MouseInputAdapter {
 			lastY = e.getY();
 		}
 	}
+	
+	@Override
+	public void mouseClicked(MouseEvent e) {
+		gamePlayComponent.receivePlayerClick(e.getX(), e.getY());
+	}
 
 	@Override
 	public void mouseDragged(MouseEvent e) {

@@ -17,12 +17,13 @@ import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
+import java.util.LinkedList;
 
 import javax.imageio.ImageIO;
 import javax.swing.JComponent;
+import javax.swing.JOptionPane;
 
 import map.data.GraphData;
-import map.data.StationNode;
 
 public class GamePlayComponent extends JComponent {
 	private static final long serialVersionUID = 1L;
@@ -238,29 +239,104 @@ public class GamePlayComponent extends JComponent {
 	}
 	
 	public boolean setHighlightAt(int x, int y) {
-		boolean changed = false;
-		int i;
-		for(i = 1; i <= GraphData.STATION_COUNT; ++i) {
-        	Shape area = graphData.getArea(i);
-        	if(area == null)
-        		continue;
-        	
-        	area = fromImageToOuterTransform().createTransformedShape(area);
-        	
-        	if(area.contains(x, y)) {
-        		if(area != highlightedArea) {
-        			highlightedArea = area;
-        			changed = true;
-        		}
-        		break;
-        	}
+		int stationId = findStationId(x, y);
+		Shape foundShape = null;
+		if (stationId != 0)
+			foundShape = fromImageToOuterTransform().createTransformedShape(graphData.getArea(stationId));
+		
+		if (foundShape == highlightedArea)
+			return false;
+		
+		highlightedArea = foundShape;
+		return true;
+	}
+	
+	public boolean isGameStarted() {
+		return gameStatus != null;
+	}
+	
+	private int findStationId(int x, int y) {
+		Point2D transformed = new Point2D.Double();
+    	fromOuterToImageTransform().transform(new Point2D.Double(x, y), transformed);
+    	
+    	return graphData.getNodeAtPosition(transformed.getX(), transformed.getY());
+	}
+	
+	public void receivePlayerClick(int x, int y) {
+		int clickedStationId = findStationId(x, y);
+		if (clickedStationId == 0)
+			return;
+		
+		Shape clickedStation = graphData.getArea(clickedStationId);
+		if (clickedStation == null)
+			return;
+		
+		Player currentPlayer = gameStatus.getCurrentPlayer();
+		int currentStationId = currentPlayer.getCurrentStationId();
+		
+		LinkedList<Object> optionObjects = new LinkedList<Object>();
+		int taxiOptionId = -1;
+		int busOptionId = -1;
+		int undergroundOptionId = -1;
+		int blackOptionId = -1;
+		
+		if (currentPlayer.getNumberOfTaxiTickets() > 0
+				&& graphData.getAdjacentTaxiAreas(currentStationId).contains(clickedStation)) {
+			taxiOptionId = optionObjects.size();
+			optionObjects.add("Taxi");
 		}
 		
-		if(i > GraphData.STATION_COUNT && highlightedArea != null) {
-			highlightedArea = null;
-			changed = true;
+		if (currentPlayer.getNumberOfBusTickets() > 0 
+				&& graphData.getAdjacentBusAreas(currentStationId).contains(clickedStation)) {
+			busOptionId = optionObjects.size();
+			optionObjects.add("Bus");
 		}
 		
-		return changed;
+		if (currentPlayer.getNumberOfUndergroundTickets() > 0
+				&& graphData.getAdjacentUndergroundAreas(currentStationId).contains(clickedStation)) {
+			undergroundOptionId = optionObjects.size();
+			optionObjects.add("Underground");
+		}
+		
+		if (currentPlayer instanceof MrXPlayer) {
+			MrXPlayer mrX = (MrXPlayer) currentPlayer;
+			if (mrX.getNumberOfBlackTickets() > 0 && graphData.getAllAdjacentAreas(currentStationId).contains(clickedStation)) {
+				blackOptionId = optionObjects.size();
+				optionObjects.add("Black Ticket");
+			}
+		}
+		
+		if (optionObjects.isEmpty()) {
+			JOptionPane.showMessageDialog(this, "You cannot reach " + clickedStationId + "!", null, JOptionPane.PLAIN_MESSAGE);
+			return;
+		}
+		
+		optionObjects.add("Cancel");
+		
+		int chosenOption = JOptionPane.showOptionDialog(this,
+				"Go to Station " + clickedStationId + " by ...",
+				"Chose transportation.",
+				JOptionPane.DEFAULT_OPTION,
+				JOptionPane.PLAIN_MESSAGE,
+				null,
+				optionObjects.toArray(),
+				optionObjects.getLast());
+		
+		if (chosenOption == optionObjects.size() - 1)
+			return;
+		
+		int ticketType = -1;
+		if (chosenOption == taxiOptionId)
+			ticketType = Player.TAXI_TICKET;
+		else if (chosenOption == busOptionId)
+			ticketType = Player.BUS_TICKET;
+		else if (chosenOption == undergroundOptionId)
+			ticketType = Player.UNDERGROUND_TICKET;
+		else if (chosenOption == blackOptionId)
+			ticketType = Player.BLACK_TICKET;
+		else
+			throw new RuntimeException(chosenOption + " was not a valid option to chose.");
+		
+		gameStatus.moveOfCurrentPlayer(clickedStationId, ticketType);
 	}
 }
