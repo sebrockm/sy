@@ -255,6 +255,12 @@ public class GamePlayComponent extends JComponent {
 	}
 	
 	public void receivePlayerClick(int x, int y) {
+		if (!canCurrentPlayerMove()) {
+			JOptionPane.showMessageDialog(this, gameStatus.getCurrentPlayer().getName() + " cannot move.");
+			gameStatus.dontMoveCurrentPlayer();
+			return;
+		}
+		
 		int clickedStationId = findStationId(x, y);
 		if (clickedStationId == 0 || gameStatus.isPositionOccupiedbyAgent(clickedStationId))
 			return;
@@ -295,7 +301,7 @@ public class GamePlayComponent extends JComponent {
 		}
 		
 		if (optionObjects.isEmpty()) {
-			JOptionPane.showMessageDialog(this, "You cannot reach " + clickedStationId + "!", null, JOptionPane.PLAIN_MESSAGE);
+			JOptionPane.showMessageDialog(this, currentPlayer.getName() + " cannot reach station " + clickedStationId + "!");
 			return;
 		}
 		
@@ -327,5 +333,48 @@ public class GamePlayComponent extends JComponent {
 		
 		gameStatus.moveOfCurrentPlayer(clickedStationId, ticketType);
 		repaint();
+	}
+	
+	private boolean canCurrentPlayerMove() {
+		Player currentPlayer = gameStatus.getCurrentPlayer();
+		int currentStationId = currentPlayer.getCurrentStationId();
+		
+		LinkedList<Integer> neighbors;
+		if (currentPlayer.getNumberOfTaxiTickets() > 0 
+				&& !(neighbors = graphData.getAdjacentTaxiStations(currentStationId)).isEmpty()) {
+			for (int neighbor : neighbors) {
+				if (!gameStatus.isPositionOccupiedbyAgent(neighbor))
+					return true;
+			}
+		}
+		
+		if (currentPlayer.getNumberOfBusTickets() > 0 
+				&& !(neighbors = graphData.getAdjacentBusStations(currentStationId)).isEmpty()) {
+			for (int neighbor : neighbors) {
+				if (!gameStatus.isPositionOccupiedbyAgent(neighbor))
+					return true;
+			}
+		}
+		
+		if (currentPlayer.getNumberOfUndergroundTickets() > 0 
+				&& !(neighbors = graphData.getAdjacentUndergroundStations(currentStationId)).isEmpty()) {
+			for (int neighbor : neighbors) {
+				if (!gameStatus.isPositionOccupiedbyAgent(neighbor))
+					return true;
+			}
+		}
+		
+		if (currentPlayer instanceof MrXPlayer) {
+			MrXPlayer mrX = (MrXPlayer)currentPlayer;
+			if (mrX.getNumberOfBlackTickets() > 0 
+					&& !(neighbors = graphData.getAllAdjacentStations(currentStationId)).isEmpty()) {
+				for (int neighbor : neighbors) {
+					if (!gameStatus.isPositionOccupiedbyAgent(neighbor))
+						return true;
+				}
+			}
+		}
+		
+		return false;
 	}
 }
