@@ -84,14 +84,6 @@ public class GamePlayComponent extends JComponent {
 	        drawHighlightedArea(highlightedArea, g2);
         }
         
-        if (gameStatus != null) {
-        	int currentStationId = gameStatus.getCurrentPlayer().getCurrentStationId();
-	        for (Shape shape : graphData.getAllAdjacentAreas(currentStationId)) {
-	        	shape = fromImageToOuterTransform().createTransformedShape(shape);
-	        	drawHighlightedArea(shape, g2);
-	        }
-        }
-        
         drawPlayerInfo(g2);
 	}
 	

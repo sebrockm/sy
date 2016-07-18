@@ -5,7 +5,7 @@ import java.util.LinkedList;
 
 public class GameStatus {
 	private final LinkedList<Player> players = new LinkedList<>();
-	private MrXPlayer mrX;
+	private MrXPlayer mrX = null;
 	private int currentPlayerId = 0;
 	private final int agentTaxiTickets;
 	private final int mrXTaxiTickets;
@@ -15,6 +15,13 @@ public class GameStatus {
 	private final int mrXUnderGroundTickets;
 	private final int blackTickets;
 	private final int doubleMoves;
+	
+	public interface GameEndCallback {
+		public void mrXWins();
+		public void agentsWin();
+	}
+	
+	private GameEndCallback gameEndCallback = null;
 	
 	public GameStatus(int agentTaxiTickets, int mrXTaxiTickets,
 			int agentBusTickets, int mrXBusTickets,
@@ -35,6 +42,10 @@ public class GameStatus {
 		currentPlayerId = (currentPlayerId + 1) % players.size();
 	}
 	
+	public void setGameEndCallback(GameEndCallback gameEndCallback) {
+		this.gameEndCallback = gameEndCallback;
+	}
+	
 	public Player getCurrentPlayer() {
 		return players.get(currentPlayerId);
 	}
@@ -45,35 +56,49 @@ public class GameStatus {
 	}
 	
 	public void addMrX(int startStationId, String name) {
+		if (mrX != null)
+			throw new IllegalStateException("You cannot have two Mr. X.");
+		
 		mrX = new MrXPlayer(startStationId, name, 
 				mrXTaxiTickets, mrXBusTickets, mrXUnderGroundTickets, blackTickets, doubleMoves);
 		players.addFirst(mrX);
 	}
 	
+	public void dontMoveCurrentPlayer() {
+		if (getCurrentPlayer() == mrX) {
+			if (gameEndCallback != null)
+				gameEndCallback.agentsWin();
+		}
+		else
+			nextPlayer();
+	}
+	
 	public void moveOfCurrentPlayer(int stationId, int ticketType) {
 		getCurrentPlayer().moveTo(stationId, ticketType);
-		if (getCurrentPlayer() != mrX)
+		if (getCurrentPlayer() != mrX) {
 			mrX.incrementTicketCounter(ticketType);
+			if (mrX.getCurrentStationId() == getCurrentPlayer().getCurrentStationId()) {
+				if (gameEndCallback != null)
+					gameEndCallback.agentsWin();
+				return;
+			}
+		}
 		nextPlayer();
 	}
 	
-	public void doubleMoveMrX(int firstStationId, int firstTicketType,
-			int secondStationId, int secondTicketType) {
-		if(!(getCurrentPlayer() instanceof MrXPlayer)) {
+	public void doubleMoveMrX(int stationId, int ticketType) {
+		if(getCurrentPlayer() != mrX) {
 			throw new IllegalStateException("Only Mr. X can do double moves.");
 		}
 		
-		MrXPlayer mrX = (MrXPlayer) getCurrentPlayer();
 		mrX.doDoubleMove();
-		mrX.moveTo(firstStationId, firstTicketType);
-		mrX.moveTo(secondStationId, secondTicketType);
+		mrX.moveTo(stationId, ticketType);
 	}
 	
 	public boolean isDoubleMovePossible() {
 		if(!(getCurrentPlayer() instanceof MrXPlayer))
 			return false;
 		
-		MrXPlayer mrX = (MrXPlayer) getCurrentPlayer();
 		return mrX.getNumberOfDoubleMoves() > 0;
 	}
 	
@@ -83,7 +108,7 @@ public class GameStatus {
 	
 	public boolean isPositionOccupiedbyAgent(int stationId) {
 		for (Player player : players) {
-			if (!(player instanceof MrXPlayer) && player.getCurrentStationId() == stationId)
+			if (player != mrX && player.getCurrentStationId() == stationId)
 				return true;
 		}
 		return false;
