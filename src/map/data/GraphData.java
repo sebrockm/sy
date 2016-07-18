@@ -53,37 +53,37 @@ public class GraphData implements Serializable {
 		return stations[nodeNumber - 1].getArea();
 	}
 	
-	private LinkedList<Shape> getAdjacentAreas(int nodeNumber, int linkType) {
+	private LinkedList<Integer> getAdjacentStations(int nodeNumber, int linkType) {
 		checkNodeNumber(nodeNumber);
 		
 		HashSet<StationLink> stationLinks = adjacencyList[nodeNumber - 1];
 		
-		LinkedList<Shape> adjacentNodes = new LinkedList<Shape>();
+		LinkedList<Integer> adjacentNodes = new LinkedList<Integer>();
 		for (StationLink link : stationLinks) {
 			if ((link.getLinkType() & linkType) != 0) {
 				if (link.getSourceStation().getNumber() == nodeNumber)
-					adjacentNodes.add(link.getTargetStation().getArea());
+					adjacentNodes.add(link.getTargetStation().getNumber());
 				else
-					adjacentNodes.add(link.getSourceStation().getArea());
+					adjacentNodes.add(link.getSourceStation().getNumber());
 			}
 		}
 		return adjacentNodes;
 	}
 	
-	public LinkedList<Shape> getAdjacentTaxiAreas(int nodeNumber) {
-		return getAdjacentAreas(nodeNumber, StationLink.TAXI_LINK);
+	public LinkedList<Integer> getAdjacentTaxiStations(int nodeNumber) {
+		return getAdjacentStations(nodeNumber, StationLink.TAXI_LINK);
 	}
 	
-	public LinkedList<Shape> getAdjacentBusAreas(int nodeNumber) {
-		return getAdjacentAreas(nodeNumber, StationLink.BUS_LINK);
+	public LinkedList<Integer> getAdjacentBusStations(int nodeNumber) {
+		return getAdjacentStations(nodeNumber, StationLink.BUS_LINK);
 	}
 	
-	public LinkedList<Shape> getAdjacentUndergroundAreas(int nodeNumber) {
-		return getAdjacentAreas(nodeNumber, StationLink.UNDERGROUND_LINK);
+	public LinkedList<Integer> getAdjacentUndergroundStations(int nodeNumber) {
+		return getAdjacentStations(nodeNumber, StationLink.UNDERGROUND_LINK);
 	}
 	
-	public LinkedList<Shape> getAllAdjacentAreas(int nodeNumber) {
-		return getAdjacentAreas(nodeNumber, 
+	public LinkedList<Integer> getAllAdjacentStations(int nodeNumber) {
+		return getAdjacentStations(nodeNumber, 
 				StationLink.TAXI_LINK | StationLink.BUS_LINK | StationLink.UNDERGROUND_LINK | StationLink.BOAT_LINK);
 	}
 	

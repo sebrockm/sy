@@ -259,10 +259,6 @@ public class GamePlayComponent extends JComponent {
 		if (clickedStationId == 0 || gameStatus.isPositionOccupiedbyAgent(clickedStationId))
 			return;
 		
-		Shape clickedStation = graphData.getArea(clickedStationId);
-		if (clickedStation == null)
-			return;
-		
 		Player currentPlayer = gameStatus.getCurrentPlayer();
 		int currentStationId = currentPlayer.getCurrentStationId();
 		
@@ -273,26 +269,26 @@ public class GamePlayComponent extends JComponent {
 		int blackOptionId = -1;
 		
 		if (currentPlayer.getNumberOfTaxiTickets() > 0
-				&& graphData.getAdjacentTaxiAreas(currentStationId).contains(clickedStation)) {
+				&& graphData.getAdjacentTaxiStations(currentStationId).contains(clickedStationId)) {
 			taxiOptionId = optionObjects.size();
 			optionObjects.add("Taxi");
 		}
 		
 		if (currentPlayer.getNumberOfBusTickets() > 0 
-				&& graphData.getAdjacentBusAreas(currentStationId).contains(clickedStation)) {
+				&& graphData.getAdjacentBusStations(currentStationId).contains(clickedStationId)) {
 			busOptionId = optionObjects.size();
 			optionObjects.add("Bus");
 		}
 		
 		if (currentPlayer.getNumberOfUndergroundTickets() > 0
-				&& graphData.getAdjacentUndergroundAreas(currentStationId).contains(clickedStation)) {
+				&& graphData.getAdjacentUndergroundStations(currentStationId).contains(clickedStationId)) {
 			undergroundOptionId = optionObjects.size();
 			optionObjects.add("Underground");
 		}
 		
 		if (currentPlayer instanceof MrXPlayer) {
 			MrXPlayer mrX = (MrXPlayer) currentPlayer;
-			if (mrX.getNumberOfBlackTickets() > 0 && graphData.getAllAdjacentAreas(currentStationId).contains(clickedStation)) {
+			if (mrX.getNumberOfBlackTickets() > 0 && graphData.getAllAdjacentStations(currentStationId).contains(clickedStationId)) {
 				blackOptionId = optionObjects.size();
 				optionObjects.add("Black Ticket");
 			}
@@ -330,5 +326,6 @@ public class GamePlayComponent extends JComponent {
 			throw new RuntimeException(chosenOption + " was not a valid option to chose.");
 		
 		gameStatus.moveOfCurrentPlayer(clickedStationId, ticketType);
+		repaint();
 	}
 }
