@@ -228,6 +228,23 @@ public class GamePlayComponent extends JComponent {
 	
 	public void setGameStatus(GameStatus gameStatus) {
 		this.gameStatus = gameStatus;
+		gameStatus.setGameEndCallback(new GameStatus.GameEndCallback() {
+			
+			@Override
+			public void mrXWins() {
+				JOptionPane.showMessageDialog(GamePlayComponent.this,
+						"Mr. was able to get away!", "End of Game", JOptionPane.DEFAULT_OPTION);
+				GamePlayComponent.this.gameStatus = null;
+			}
+			
+			@Override
+			public void agentsWin() {
+				JOptionPane.showMessageDialog(GamePlayComponent.this, 
+						GamePlayComponent.this.gameStatus.getCurrentPlayer().getName() + " caught Mr. X!",
+						"End of Game", JOptionPane.DEFAULT_OPTION);
+				GamePlayComponent.this.gameStatus = null;
+			}
+		});
 	}
 	
 	public boolean setHighlightAt(int x, int y) {
@@ -255,6 +272,9 @@ public class GamePlayComponent extends JComponent {
 	}
 	
 	public void receivePlayerClick(int x, int y) {
+		if (gameStatus == null)
+			return;
+		
 		if (!canCurrentPlayerMove()) {
 			JOptionPane.showMessageDialog(this, gameStatus.getCurrentPlayer().getName() + " cannot move.");
 			gameStatus.dontMoveCurrentPlayer();
