@@ -17,7 +17,6 @@ import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
-import java.util.LinkedList;
 
 import javax.imageio.ImageIO;
 import javax.swing.JComponent;
@@ -159,24 +158,26 @@ public class GamePlayComponent extends JComponent {
 		}
 	}
 	
-	private void drawHighlightedArea(Shape area, Graphics2D g2) {
+	private void drawHighlightedArea(Shape areaOnImage, Graphics2D g2) {
 		Color lastColor = g2.getColor();
         
-		AffineTransform at = fromOuterToImageTransform();        
-        Rectangle2D bounds = area.getBounds2D();
+        Shape areaOnScreen = fromImageToOuterTransform().createTransformedShape(areaOnImage);     
+        Rectangle2D bounds = areaOnScreen.getBounds2D();
+        
+        AffineTransform at = fromOuterToImageTransform();
         
         for(int y = 0; y < bounds.getHeight(); ++y) {
     		for(int x = 0; x < bounds.getWidth(); ++x) {
-    			Point2D p = new Point2D.Double(bounds.getMinX() + x, bounds.getMinY() + y);
-    			if(!area.contains(p))
+    			Point2D screenP = new Point2D.Double(bounds.getMinX() + x, bounds.getMinY() + y);
+    			if(!areaOnScreen.contains(screenP))
     				continue;
     			
-    			Point2D imageP = at.transform(p, null);
+    			Point2D imageP = at.transform(screenP, null);
     			Color pixelColor = new Color(mapImage.getRGB((int)imageP.getX(), (int)imageP.getY()), true).brighter();
     			g2.setColor(pixelColor);
-    			g2.draw(new Rectangle((int)p.getX(), (int)p.getY(), 1, 1));
+    			g2.draw(new Rectangle((int)screenP.getX(), (int)screenP.getY(), 1, 1));
     		}
-    	}
+        }
         
         g2.setColor(lastColor);
 	}
@@ -224,16 +225,18 @@ public class GamePlayComponent extends JComponent {
 	public void translate(double dx, double dy) {
 		topLeftCornerX += dx;
 		topLeftCornerY += dy;
+		repaint();
 	}
 	
-	public void setGameStatus(GameStatus gameStatus) {
+	public void startGame(GameStatus gameStatus) {
 		this.gameStatus = gameStatus;
+		
 		gameStatus.setGameEndCallback(new GameStatus.GameEndCallback() {
 			
 			@Override
 			public void mrXWins() {
 				JOptionPane.showMessageDialog(GamePlayComponent.this,
-						"Mr. was able to get away!", "End of Game", JOptionPane.DEFAULT_OPTION);
+						"Mr. X was able to get away!", "End of Game", JOptionPane.DEFAULT_OPTION);
 				GamePlayComponent.this.gameStatus = null;
 			}
 			
@@ -248,15 +251,13 @@ public class GamePlayComponent extends JComponent {
 	}
 	
 	public boolean setHighlightAt(int x, int y) {
-		int stationId = findStationId(x, y);
-		Shape foundShape = null;
-		if (stationId != 0)
-			foundShape = fromImageToOuterTransform().createTransformedShape(graphData.getArea(stationId));
+		Shape area = lookupStationArea(x, y);
 		
-		if (foundShape == highlightedArea)
+		if (area == highlightedArea)
 			return false;
 		
-		highlightedArea = foundShape;
+		highlightedArea = area;
+		repaint();
 		return true;
 	}
 	
@@ -264,137 +265,11 @@ public class GamePlayComponent extends JComponent {
 		return gameStatus != null;
 	}
 	
-	private int findStationId(int x, int y) {
-		Point2D transformed = new Point2D.Double();
-    	fromOuterToImageTransform().transform(new Point2D.Double(x, y), transformed);
-    	
-    	return graphData.getNodeAtPosition(transformed.getX(), transformed.getY());
-	}
-	
-	public void receivePlayerClick(int x, int y) {
-		if (gameStatus == null)
-			return;
-		
-		if (!canCurrentPlayerMove()) {
-			JOptionPane.showMessageDialog(this, gameStatus.getCurrentPlayer().getName() + " cannot move.");
-			gameStatus.dontMoveCurrentPlayer();
-			return;
-		}
-		
-		int clickedStationId = findStationId(x, y);
-		if (clickedStationId == 0 || gameStatus.isPositionOccupiedbyAgent(clickedStationId))
-			return;
-		
-		Player currentPlayer = gameStatus.getCurrentPlayer();
-		int currentStationId = currentPlayer.getCurrentStationId();
-		
-		LinkedList<Object> optionObjects = new LinkedList<Object>();
-		int taxiOptionId = -1;
-		int busOptionId = -1;
-		int undergroundOptionId = -1;
-		int blackOptionId = -1;
-		
-		if (currentPlayer.getNumberOfTaxiTickets() > 0
-				&& graphData.getAdjacentTaxiStations(currentStationId).contains(clickedStationId)) {
-			taxiOptionId = optionObjects.size();
-			optionObjects.add("Taxi");
-		}
-		
-		if (currentPlayer.getNumberOfBusTickets() > 0 
-				&& graphData.getAdjacentBusStations(currentStationId).contains(clickedStationId)) {
-			busOptionId = optionObjects.size();
-			optionObjects.add("Bus");
-		}
-		
-		if (currentPlayer.getNumberOfUndergroundTickets() > 0
-				&& graphData.getAdjacentUndergroundStations(currentStationId).contains(clickedStationId)) {
-			undergroundOptionId = optionObjects.size();
-			optionObjects.add("Underground");
-		}
-		
-		if (currentPlayer instanceof MrXPlayer) {
-			MrXPlayer mrX = (MrXPlayer) currentPlayer;
-			if (mrX.getNumberOfBlackTickets() > 0 && graphData.getAllAdjacentStations(currentStationId).contains(clickedStationId)) {
-				blackOptionId = optionObjects.size();
-				optionObjects.add("Black Ticket");
-			}
-		}
-		
-		if (optionObjects.isEmpty()) {
-			JOptionPane.showMessageDialog(this, currentPlayer.getName() + " cannot reach station " + clickedStationId + "!");
-			return;
-		}
-		
-		optionObjects.add("Cancel");
-		
-		int chosenOption = JOptionPane.showOptionDialog(this,
-				"Go to Station " + clickedStationId + " by ...",
-				"Chose transportation.",
-				JOptionPane.DEFAULT_OPTION,
-				JOptionPane.PLAIN_MESSAGE,
-				null,
-				optionObjects.toArray(),
-				optionObjects.getLast());
-		
-		if (chosenOption == optionObjects.size() - 1)
-			return;
-		
-		int ticketType = -1;
-		if (chosenOption == taxiOptionId)
-			ticketType = Player.TAXI_TICKET;
-		else if (chosenOption == busOptionId)
-			ticketType = Player.BUS_TICKET;
-		else if (chosenOption == undergroundOptionId)
-			ticketType = Player.UNDERGROUND_TICKET;
-		else if (chosenOption == blackOptionId)
-			ticketType = Player.BLACK_TICKET;
-		else
-			throw new RuntimeException(chosenOption + " was not a valid option to chose.");
-		
-		gameStatus.moveOfCurrentPlayer(clickedStationId, ticketType);
-		repaint();
-	}
-	
-	private boolean canCurrentPlayerMove() {
-		Player currentPlayer = gameStatus.getCurrentPlayer();
-		int currentStationId = currentPlayer.getCurrentStationId();
-		
-		LinkedList<Integer> neighbors;
-		if (currentPlayer.getNumberOfTaxiTickets() > 0 
-				&& !(neighbors = graphData.getAdjacentTaxiStations(currentStationId)).isEmpty()) {
-			for (int neighbor : neighbors) {
-				if (!gameStatus.isPositionOccupiedbyAgent(neighbor))
-					return true;
-			}
-		}
-		
-		if (currentPlayer.getNumberOfBusTickets() > 0 
-				&& !(neighbors = graphData.getAdjacentBusStations(currentStationId)).isEmpty()) {
-			for (int neighbor : neighbors) {
-				if (!gameStatus.isPositionOccupiedbyAgent(neighbor))
-					return true;
-			}
-		}
-		
-		if (currentPlayer.getNumberOfUndergroundTickets() > 0 
-				&& !(neighbors = graphData.getAdjacentUndergroundStations(currentStationId)).isEmpty()) {
-			for (int neighbor : neighbors) {
-				if (!gameStatus.isPositionOccupiedbyAgent(neighbor))
-					return true;
-			}
-		}
-		
-		if (currentPlayer instanceof MrXPlayer) {
-			MrXPlayer mrX = (MrXPlayer)currentPlayer;
-			if (mrX.getNumberOfBlackTickets() > 0 
-					&& !(neighbors = graphData.getAllAdjacentStations(currentStationId)).isEmpty()) {
-				for (int neighbor : neighbors) {
-					if (!gameStatus.isPositionOccupiedbyAgent(neighbor))
-						return true;
-				}
-			}
-		}
-		
-		return false;
+	private Shape lookupStationArea(int x, int y) {
+		Point2D imageP = fromOuterToImageTransform().transform(new Point2D.Double(x, y), null);
+		int stationId = graphData.getNodeAtPosition(imageP.getX(), imageP.getY());
+		if (stationId == 0)
+			return null;
+		return graphData.getArea(stationId);
 	}
 }

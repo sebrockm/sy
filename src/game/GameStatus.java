@@ -15,6 +15,7 @@ public class GameStatus {
 	private final int mrXUnderGroundTickets;
 	private final int blackTickets;
 	private final int doubleMoves;
+	private boolean isEnd = false;
 	
 	public interface GameEndCallback {
 		public void mrXWins();
@@ -46,6 +47,10 @@ public class GameStatus {
 		this.gameEndCallback = gameEndCallback;
 	}
 	
+	public boolean isGameEnd() {
+		return isEnd;
+	}
+	
 	public Player getCurrentPlayer() {
 		return players.get(currentPlayerId);
 	}
@@ -64,39 +69,41 @@ public class GameStatus {
 		players.addFirst(mrX);
 	}
 	
-	public void dontMoveCurrentPlayer() {
-		if (getCurrentPlayer() == mrX) {
-			if (gameEndCallback != null)
-				gameEndCallback.agentsWin();
-		}
-		else
-			nextPlayer();
-	}
-	
-	public void moveOfCurrentPlayer(int stationId, int ticketType) {
-		getCurrentPlayer().moveTo(stationId, ticketType);
-		if (getCurrentPlayer() != mrX) {
-			mrX.incrementTicketCounter(ticketType);
-			if (mrX.getCurrentStationId() == getCurrentPlayer().getCurrentStationId()) {
-				if (gameEndCallback != null)
-					gameEndCallback.agentsWin();
-				return;
+	public void moveCurrentPlayer(PlayerMove move) {
+		if (move.isValid()) {
+			getCurrentPlayer().moveTo(move.getDestinationId(), move.getTransportation());
+			if (move.isDoubleMove()) {
+				if(getCurrentPlayer() != mrX)
+					throw new IllegalStateException("Only Mr. X can do double moves.");
+				mrX.doDoubleMove();
 			}
+				
+			if (getCurrentPlayer() != mrX) {
+				mrX.incrementTicketCounter(move.getTransportation());
+				if (mrX.getCurrentStationId() == getCurrentPlayer().getCurrentStationId()) {
+					if (gameEndCallback != null) {
+						gameEndCallback.agentsWin();
+						isEnd = true;
+					}
+					return;
+				}
+			}
+			nextPlayer();
 		}
-		nextPlayer();
-	}
-	
-	public void doubleMoveMrX(int stationId, int ticketType) {
-		if(getCurrentPlayer() != mrX) {
-			throw new IllegalStateException("Only Mr. X can do double moves.");
+		else {
+			if (getCurrentPlayer() == mrX) {
+				if (gameEndCallback != null) {
+					gameEndCallback.agentsWin();
+					isEnd = true;
+				}
+			}
+			else
+				nextPlayer();
 		}
-		
-		mrX.doDoubleMove();
-		mrX.moveTo(stationId, ticketType);
 	}
 	
 	public boolean isDoubleMovePossible() {
-		if(!(getCurrentPlayer() instanceof MrXPlayer))
+		if(getCurrentPlayer() != mrX)
 			return false;
 		
 		return mrX.getNumberOfDoubleMoves() > 0;

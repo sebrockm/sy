@@ -53,6 +53,19 @@ public class GraphData implements Serializable {
 		return stations[nodeNumber - 1].getArea();
 	}
 	
+	public int getNodeAtPosition(double x, double y) {
+		for(int i = 1; i <= stations.length; ++i) {
+			Shape area = getArea(i);
+			if(area == null)
+				continue;
+			
+			if(area.contains(x, y))
+				return i;
+		}
+		
+		return 0;
+	}
+	
 	private LinkedList<Integer> getAdjacentStations(int nodeNumber, int linkType) {
 		checkNodeNumber(nodeNumber);
 		
@@ -89,20 +102,7 @@ public class GraphData implements Serializable {
 	
 	// ----------------------------------------------------------------------------------------------------------
 	// this section is for creating graph data during development
-	
-	public int getNodeAtPosition(double x, double y) {
-		for(int i = 1; i <= stations.length; ++i) {
-			Shape area = getArea(i);
-			if(area == null)
-				continue;
-			
-			if(area.contains(x, y))
-				return i;
-		}
-		
-		return 0;
-	}
-	
+
 	@SuppressWarnings("unchecked") // stupid java cannot create a generic type array...
 	public GraphData() {
 		stations = new StationNode[STATION_COUNT];

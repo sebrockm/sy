@@ -22,20 +22,15 @@ public class GamePlayMouseInputAdapter extends MouseInputAdapter {
 			lastY = e.getY();
 		}
 	}
-	
-	@Override
-	public void mouseClicked(MouseEvent e) {
-		gamePlayComponent.receivePlayerClick(e.getX(), e.getY());
-	}
 
 	@Override
 	public void mouseDragged(MouseEvent e) {
 		gamePlayComponent.setHighlightAt(e.getX(), e.getY());
 		if(SwingUtilities.isLeftMouseButton(e)) {
 			gamePlayComponent.translate(e.getX() - lastX, e.getY() - lastY);
+			gamePlayComponent.repaint();
 			lastX = e.getX();
 			lastY = e.getY();
-			gamePlayComponent.repaint();
 		}
 	}
 	
@@ -54,7 +49,6 @@ public class GamePlayMouseInputAdapter extends MouseInputAdapter {
 	
 	@Override
 	public void mouseMoved(MouseEvent e) {
-		if(gamePlayComponent.setHighlightAt(e.getX(), e.getY()))
-			gamePlayComponent.repaint();
+		gamePlayComponent.setHighlightAt(e.getX(), e.getY());
 	}
 }

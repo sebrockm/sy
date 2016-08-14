@@ -1,7 +1,11 @@
 package gui;
 
 import game.GameStatus;
+import game.Player;
+import game.PlayerMove;
+import game.controll.InputReceiver;
 
+import java.awt.Dimension;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.IOException;
@@ -31,6 +35,7 @@ public class MainWindow {
 	private final JMenuItem newGameMenuItem;
 	
 	private GameStatus gameStatus = null;
+	private InputReceiver inputReceiver;
 	private final NewGameWindow newGameWindow = new NewGameWindow();
 	
 	public MainWindow() throws IOException {
@@ -72,10 +77,21 @@ public class MainWindow {
 			return;
 		}
 		
-		gamePlay.setGameStatus(gameStatus);
+		gamePlay.startGame(gameStatus);
+		
+		inputReceiver = new InputReceiver(gamePlay, gameStatus);
+		for (Player player : gameStatus.getPlayers())
+			inputReceiver.addLocalPlayer(player);
+		
+		while (!gameStatus.isGameEnd()) {
+			PlayerMove move = inputReceiver.waitForPlayerMove();
+			gameStatus.moveCurrentPlayer(move);
+		}
 	}
 	
 	private void setDefaultFramePosition() {
 		frame.setExtendedState(JFrame.MAXIMIZED_BOTH);
+		Dimension twoThirdsSize = new Dimension(frame.getWidth() * 2 / 3, frame.getHeight() * 2 / 3);
+		frame.setPreferredSize(twoThirdsSize);
 	}
 }
