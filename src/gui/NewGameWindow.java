@@ -8,6 +8,8 @@ import java.awt.Component;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.ItemEvent;
+import java.awt.event.ItemListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.util.Collections;
@@ -46,7 +48,7 @@ public class NewGameWindow extends JFrame {
 	private final JComboBox<String> agentCountDropBox = new JComboBox<String>();
 	
 	private final JTextField mrXTextField = new JTextField();
-	private final JCheckBox mrXNetworkCheckBox = new JCheckBox("Network Player", true);
+	private final JCheckBox mrXNetworkCheckBox = new JCheckBox("Local Player", true);
 	private final LinkedList<JTextField> agentTextFields = new LinkedList<>();
 	private final LinkedList<JComboBox<String>> agentColors = new LinkedList<>();
 	private final LinkedList<JCheckBox> agentNetworkCheckBoxes = new LinkedList<>();
@@ -80,6 +82,13 @@ public class NewGameWindow extends JFrame {
 					lock.unlock();
 				}
 			}
+		});
+		
+		mrXNetworkCheckBox.addItemListener(new ItemListener() {
+			@Override
+			public void itemStateChanged(ItemEvent e) {
+				mrXTextField.setEditable(e.getStateChange() == ItemEvent.SELECTED);
+			}		
 		});
 	}
 	
@@ -172,17 +181,23 @@ public class NewGameWindow extends JFrame {
 		JLabel label = new JLabel("Name of Agent " + agentRows + ": ");
 		label.setPreferredSize(label.getSize());
 		
-		JTextField text = new JTextField("Name");
+		final JTextField text = new JTextField();
 		text.setPreferredSize(text.getSize());
-		text.setText("");
+		text.setEditable(false);
 		agentTextFields.addLast(text);
 		
 		JComboBox<String> colorDropDown = new JComboBox<>(choosableColorStrings);
 		colorDropDown.setSelectedIndex(agentRows - 1);
 		agentColors.addLast(colorDropDown);
 		
-		JCheckBox checkBox = new JCheckBox("Network Player");
+		JCheckBox checkBox = new JCheckBox("Local Player");
 		checkBox.setPreferredSize(checkBox.getPreferredSize());
+		checkBox.addItemListener(new ItemListener() {
+			@Override
+			public void itemStateChanged(ItemEvent e) {
+				text.setEditable(e.getStateChange() == ItemEvent.SELECTED);
+			}		
+		});
 		agentNetworkCheckBoxes.addLast(checkBox);
 		
 		componentStack.addLast(playerPanel.add(label));
