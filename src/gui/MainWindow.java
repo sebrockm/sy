@@ -33,6 +33,7 @@ public class MainWindow {
 	private final JFrame frame = new JFrame();
 	private final GamePlayComponent gamePlay;
 	private final JMenuItem newGameMenuItem;
+	private final JMenuItem joinGameMenuItem;
 	
 	private GameStatus gameStatus = null;
 	private InputReceiver inputReceiver;
@@ -47,6 +48,7 @@ public class MainWindow {
 		JMenuBar menuBar = new JMenuBar();
 		JMenu gameMenu = menuBar.add(new JMenu("Game"));
 		newGameMenuItem = gameMenu.add(new JMenuItem("New Game"));
+		joinGameMenuItem = gameMenu.add(new JMenuItem("Join Game"));
 		frame.setJMenuBar(menuBar);
 		
 		newGameMenuItem.addActionListener(new ActionListener() {
@@ -65,6 +67,17 @@ public class MainWindow {
 					}).start();
 				}
 			}
+		});
+		
+		joinGameMenuItem.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				String ipAddress = (String)JOptionPane.showInputDialog(
+	                    frame,  "Enter Server IP Address:",
+	                    "Enter Server IP Address",
+	                    JOptionPane.PLAIN_MESSAGE,
+	                    null, null, "127.0.0.1");
+			}	
 		});
 		
 		setDefaultFramePosition();
