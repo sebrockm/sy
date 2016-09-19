@@ -58,12 +58,21 @@ public class MainWindow {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				synchronized (monitor) {
+					if (!newGameMenuItem.isEnabled())
+						return;
+					
 					new Thread(new Runnable() {
 						@Override
 						public void run() {
-							gameStatus = new NewGameWindow(frame).waitForGameStatus();
-							if(gameStatus != null)
-								startGame();
+							newGameMenuItem.setEnabled(false);
+							try {
+								gameStatus = new NewGameWindow(frame).waitForGameStatus();
+								
+								if(gameStatus != null)
+									startGame();
+							} finally {
+								newGameMenuItem.setEnabled(true);
+							}
 						}
 					}).start();
 				}
