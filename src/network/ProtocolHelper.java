@@ -21,6 +21,7 @@ public class ProtocolHelper {
 		}
 	}
 	
+	public final static int PORT = 12345;
 	public final static Ping PING = new Ping();
 	public final static MoveRequest MOVE_REQUEST = new MoveRequest();
 }

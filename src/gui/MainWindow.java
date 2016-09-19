@@ -16,6 +16,8 @@ import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 
+import network.ClientToServerConnection;
+
 public class MainWindow {
 
 	/**
@@ -71,11 +73,18 @@ public class MainWindow {
 		joinGameMenuItem.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				String ipAddress = (String)JOptionPane.showInputDialog(
+				String hostAddress = (String)JOptionPane.showInputDialog(
 	                    frame,  "Enter Server IP Address:",
 	                    "Enter Server IP Address",
 	                    JOptionPane.PLAIN_MESSAGE,
 	                    null, null, "127.0.0.1");
+				
+				try {
+					new ClientToServerConnection(hostAddress);
+				} catch (IOException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
 			}	
 		});
 		

@@ -7,11 +7,11 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
 
-public class ClientConnection {	
+public class ServerToClientConnection {	
 	private final ObjectInputStream inputStream;
 	private final ObjectOutputStream outputStream;
 	
-	public ClientConnection(Socket socket) throws IOException {
+	public ServerToClientConnection(Socket socket) throws IOException {
 		inputStream = new ObjectInputStream(socket.getInputStream());
 		outputStream = new ObjectOutputStream(socket.getOutputStream());
 	}

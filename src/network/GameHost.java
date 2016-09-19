@@ -7,15 +7,14 @@ import java.net.Socket;
 public class GameHost {
 	private final ServerSocket serverSocket;
 	
-	public GameHost(int port) throws IOException
-	{
-		serverSocket = new ServerSocket(port);
+	public GameHost() throws IOException {
+		serverSocket = new ServerSocket(ProtocolHelper.PORT);
 	}
 	
-	public ClientConnection waitForIncomingClientConnection() {
+	public ServerToClientConnection waitForIncomingClientConnection() {
 		try {
 			Socket socket = serverSocket.accept();
-			return new ClientConnection(socket);
+			return new ServerToClientConnection(socket);
 		} catch (IOException e) {
 			return null;
 		}

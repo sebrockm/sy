@@ -5,9 +5,9 @@ import game.controll.PlayerInputReceiver;
 
 public class NetworkPlayerInputReceiver implements PlayerInputReceiver {
 
-	private final ClientConnection clientConnection;
+	private final ServerToClientConnection clientConnection;
 	
-	public NetworkPlayerInputReceiver(ClientConnection clientConnection) {
+	public NetworkPlayerInputReceiver(ServerToClientConnection clientConnection) {
 		this.clientConnection = clientConnection;
 	}
 	
