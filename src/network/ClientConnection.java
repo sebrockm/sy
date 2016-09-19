@@ -1,16 +1,13 @@
 package network;
 
+import game.PlayerMove;
+
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.io.Serializable;
 import java.net.Socket;
 
-public class ClientConnection {
-	private class Ping implements Serializable {
-		private static final long serialVersionUID = 2544201995473409008L;
-	}
-	
+public class ClientConnection {	
 	private final ObjectInputStream inputStream;
 	private final ObjectOutputStream outputStream;
 	
@@ -21,10 +18,19 @@ public class ClientConnection {
 	
 	public boolean Ping() {
 		try {
-			outputStream.writeObject(new Ping());
-			return inputStream.readObject().getClass().equals(Ping.class);
+			outputStream.writeObject(ProtocolHelper.PING);
+			return inputStream.readObject().equals(ProtocolHelper.PING);
 		} catch (IOException | ClassNotFoundException e) {
 			return false;
+		}
+	}
+	
+	public PlayerMove requestPlayerMove() {
+		try {
+			outputStream.writeObject(ProtocolHelper.MOVE_REQUEST);
+			return (PlayerMove)inputStream.readObject();
+		} catch (IOException | ClassNotFoundException e) {
+			return null;
 		}
 	}
 }

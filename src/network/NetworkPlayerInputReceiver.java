@@ -13,7 +13,7 @@ public class NetworkPlayerInputReceiver implements PlayerInputReceiver {
 	
 	@Override
 	public PlayerMove waitForMove() {
-		return null;
+		return clientConnection.requestPlayerMove();
 	}
 
 }
