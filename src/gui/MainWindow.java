@@ -6,6 +6,7 @@ import game.PlayerMove;
 import game.controll.InputReceiver;
 
 import java.awt.Dimension;
+import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.IOException;
@@ -42,6 +43,7 @@ public class MainWindow {
 	
 	public MainWindow() throws IOException {
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		frame.setVisible(true);
 		
 		gamePlay = new GamePlayComponent();
 		frame.add(gamePlay);
@@ -98,7 +100,6 @@ public class MainWindow {
 		});
 		
 		setDefaultFramePosition();
-		frame.setVisible(true);
 	}
 	
 	private void startGame() {
@@ -120,8 +121,9 @@ public class MainWindow {
 	}
 	
 	private void setDefaultFramePosition() {
-		frame.setExtendedState(JFrame.MAXIMIZED_BOTH);
-		Dimension twoThirdsSize = new Dimension(frame.getWidth() * 2 / 3, frame.getHeight() * 2 / 3);
-		frame.setPreferredSize(twoThirdsSize);
+		Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
+		Dimension threeQuaterSize = new Dimension(screenSize.width * 3 / 4, screenSize.height * 3 / 4);
+		frame.setPreferredSize(threeQuaterSize);
+		frame.setSize(threeQuaterSize);
 	}
 }
