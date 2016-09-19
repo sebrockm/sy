@@ -29,18 +29,14 @@ import javax.swing.JTextField;
 
 import map.data.GraphData;
 
-public class NewGameWindow extends JFrame {
-
-	/**
-	 * 
-	 */
-	private static final long serialVersionUID = 1L;
-	
+public class NewGameWindow {
 	private static final String[] choosableColorStrings = 
 		{ "red", "orange", "yellow", "green", "blue", "puple", "cyan",  "white"};
 	private static final Color[] choosableColors =
 		{ Color.red, Color.orange, Color.yellow.brighter(), Color.green, 
 		Color.blue, Color.magenta.darker(), Color.cyan,  Color.white};
+
+	private final JFrame frame;
 	
 	private static final int maxAgentCount = choosableColorStrings.length;
 	private static final int minAgentCount = 4;
@@ -64,13 +60,17 @@ public class NewGameWindow extends JFrame {
 	private boolean okClicked = false;
 	private GameStatus gameStatus = null;
 
-	public NewGameWindow() {
+	public NewGameWindow(JFrame parent) {
+		frame = new JFrame("New Game");
+		frame.setLocation(parent.getLocation());
+		frame.setVisible(true);
+		
 		initAgentCountDropBox();
 		initPlayerPanel();	
 		initOkButton();
-		this.pack();
+		frame.pack();
 		
-		this.addWindowListener(new WindowAdapter() {
+		frame.addWindowListener(new WindowAdapter() {
 			@Override
 			public void windowClosing(WindowEvent e) {
 				lock.lock();
@@ -102,16 +102,16 @@ public class NewGameWindow extends JFrame {
 						prepareGameStatus();
 						okClicked = true;
 						gameStatusIsReady.signalAll();
-						NewGameWindow.this.setVisible(false);
+						frame.setVisible(false);
 					} finally {
 						lock.unlock();
 					}
 				} else {
-					JOptionPane.showMessageDialog(NewGameWindow.this, "Input is invalid!");
+					JOptionPane.showMessageDialog(frame, "Input is invalid!");
 				}
 			}
 		});
-		this.add(okButton, BorderLayout.SOUTH);
+		frame.add(okButton, BorderLayout.SOUTH);
 	}
 	
 	private boolean isInputValid() {
@@ -154,15 +154,15 @@ public class NewGameWindow extends JFrame {
 			public void actionPerformed(ActionEvent e) {
 				int newAgentRows = agentCountDropBox.getSelectedIndex() + minAgentCount;
 				NewGameWindow.this.setAgentRows(newAgentRows);
-				NewGameWindow.this.pack();
+				frame.pack();
 			}
 		});
-		this.add(agentCountDropBox, BorderLayout.NORTH);
+		frame.add(agentCountDropBox, BorderLayout.NORTH);
 	}
 	
 	private void initPlayerPanel() {
 		playerPanel.setLayout(playerPanelLayout);
-		this.add(playerPanel, BorderLayout.CENTER);
+		frame.add(playerPanel, BorderLayout.CENTER);
 		
 		JLabel label = new JLabel("Name of Mr. X: ");
 		label.setPreferredSize(label.getSize());

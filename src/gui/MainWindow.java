@@ -37,7 +37,6 @@ public class MainWindow {
 	
 	private GameStatus gameStatus = null;
 	private InputReceiver inputReceiver;
-	private final NewGameWindow newGameWindow = new NewGameWindow();
 	
 	public MainWindow() throws IOException {
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -52,15 +51,15 @@ public class MainWindow {
 		frame.setJMenuBar(menuBar);
 		
 		newGameMenuItem.addActionListener(new ActionListener() {
+			private final Object monitor = new Object();
+			
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				if(!newGameWindow.isVisible()) {
-					newGameWindow.setLocation(frame.getLocation());
-					newGameWindow.setVisible(true);
+				synchronized (monitor) {
 					new Thread(new Runnable() {
 						@Override
 						public void run() {
-							gameStatus = newGameWindow.waitForGameStatus();
+							gameStatus = new NewGameWindow(frame).waitForGameStatus();
 							if(gameStatus != null)
 								startGame();
 						}
