@@ -10,6 +10,7 @@ import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.IOException;
+import java.net.UnknownHostException;
 
 import javax.swing.JFrame;
 import javax.swing.JMenu;
@@ -84,17 +85,24 @@ public class MainWindow {
 		joinGameMenuItem.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				String hostAddress = (String)JOptionPane.showInputDialog(
-	                    frame,  "Enter Server IP Address:",
-	                    "Enter Server IP Address",
-	                    JOptionPane.PLAIN_MESSAGE,
-	                    null, null, "127.0.0.1");
-				
-				try {
-					new ClientToServerConnection(hostAddress);
-				} catch (IOException e1) {
-					// TODO Auto-generated catch block
-					e1.printStackTrace();
+				ClientToServerConnection connection = null;				
+				while (connection == null) {
+					String hostAddress = (String)JOptionPane.showInputDialog(
+		                    frame,  "Enter Server IP Address:",
+		                    "Enter Server IP Address",
+		                    JOptionPane.PLAIN_MESSAGE,
+		                    null, null, "127.0.0.1");
+					
+					if (hostAddress == null)
+						break;
+					
+					try {
+						connection = new ClientToServerConnection(hostAddress);
+					} catch (UnknownHostException ex) {
+						ex.printStackTrace();
+					} catch (IOException ex) {
+						ex.printStackTrace();
+					}
 				}
 			}	
 		});

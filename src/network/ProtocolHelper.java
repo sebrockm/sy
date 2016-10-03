@@ -1,27 +1,9 @@
 package network;
 
-import java.io.Serializable;
-
 public class ProtocolHelper {
-	private static class Ping implements Serializable {
-		private static final long serialVersionUID = 2544201995473409008L;
-		
-		@Override
-		public boolean equals(Object o) {
-			return o.getClass().equals(this.getClass());
-		}
-	}
-	
-	private static class MoveRequest implements Serializable {
-		private static final long serialVersionUID = 454099640188938399L;
-		
-		@Override
-		public boolean equals(Object o) {
-			return o.getClass().equals(this.getClass());
-		}
-	}
-	
 	public final static int PORT = 12345;
-	public final static Ping PING = new Ping();
-	public final static MoveRequest MOVE_REQUEST = new MoveRequest();
+	public final static int PING = 0;
+	public final static int MOVE_REQUEST = 2;
+	public final static int GAME_STATUS_REQUEST = 3;
+	public final static int SUCCESS = 1023;
 }
